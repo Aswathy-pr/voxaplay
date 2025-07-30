@@ -10,9 +10,9 @@ import 'dart:typed_data';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoService {
-  static const String _boxName = 'videoBox'; // Matches initializeHive
+  static const String _boxName = 'videoBox'; 
 
-  // Ensure box is open before accessing
+  
   Future<Box<Video>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
       await Hive.openBox<Video>(_boxName);
@@ -24,7 +24,6 @@ class VideoService {
     try {
       print("Creating video from file:  [38;5;2m");
       
-      // Get file info
       FileStat stat = await file.stat();
       print("File size:  [38;5;2m");
       
@@ -33,7 +32,7 @@ class VideoService {
         return null;
       }
 
-      // Extract video metadata
+    
       Duration? duration;
       Uint8List? thumbnail;
 
@@ -45,18 +44,18 @@ class VideoService {
         print("Video duration:  [38;5;2m");
         
         await controller.dispose();
-        // Generate thumbnail using video_thumbnail package
+        
         thumbnail = await VideoThumbnail.thumbnailData(
           video: file.path,
           imageFormat: ImageFormat.PNG,
-          maxWidth: 128, // reasonable size for list
+          maxWidth: 128, 
           quality: 75,
         );
       } catch (e) {
         print("Error extracting video metadata for  [38;5;2m");
       }
 
-      // Clean up title (remove extension)
+      
       String fileNameClean = file.path.split('/').last;
       int dotIndex = fileNameClean.lastIndexOf('.');
       String cleanTitle = dotIndex != -1 ? fileNameClean.substring(0, dotIndex) : fileNameClean;
@@ -118,7 +117,7 @@ class VideoService {
     }
   }
 
-  // Fetch videos from local device and save to Hive
+  // Fetch videos 
   Future<List<Video>> fetchVideos() async {
     List<Video> videos = [];
     try {
@@ -136,12 +135,12 @@ class VideoService {
         return videos;
       }
 
-      // Clear existing videos to prevent duplicates
+      
       final box = await _getBox();
       await box.clear();
       print("Cleared existing videos from Hive");
 
-      // Get external storage directory
+     
       Directory? externalDir = await getExternalStorageDirectory();
       print("External storage directory: ${externalDir?.path}");
       
@@ -150,7 +149,7 @@ class VideoService {
         return videos;
       }
 
-      // Common video directories to scan
+     
       List<String> videoDirectories = [
         '/storage/emulated/0/DCIM',
         '/storage/emulated/0/Movies',
@@ -159,7 +158,7 @@ class VideoService {
         externalDir.path,
       ];
 
-      // Video file extensions
+     
       List<String> videoExtensions = [
         '.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.3gp'
       ];
@@ -183,7 +182,7 @@ class VideoService {
 
       print("Found ${videos.length} videos after scanning directories");
 
-      // Remove duplicates and filter out trashed/system videos before saving to Hive and returning
+     
       final uniqueVideos = <String, Video>{};
       for (var video in videos) {
         uniqueVideos[video.path] = video;
@@ -216,7 +215,7 @@ class VideoService {
         return videos;
       }
 
-      // Clear existing videos to prevent duplicates
+      //  prevent duplicates
       final box = await _getBox();
       await box.clear();
       print("Cleared existing videos from Hive");
@@ -234,7 +233,7 @@ class VideoService {
         for (var file in videoFiles) {
           final video = await _createVideoFromFile(file);
           if (video != null) {
-            // Only add if not already in the list (by path)
+            // Only add if not already in the list 
             if (!videos.any((v) => v.path == video.path)) {
               videos.add(video);
             }
@@ -244,7 +243,7 @@ class VideoService {
         print("File picker was cancelled or returned null");
       }
 
-      // Remove duplicates and filter out trashed/system videos before saving to Hive and returning
+      // Remove duplicates 
       final uniqueVideos = <String, Video>{};
       for (var video in videos) {
         uniqueVideos[video.path] = video;
@@ -271,6 +270,6 @@ class VideoService {
     if (Hive.isBoxOpen(_boxName)) {
       return Hive.box<Video>(_boxName).values.toList();
     }
-    return []; // Return empty list if box isn't open
+    return []; 
   }
 }

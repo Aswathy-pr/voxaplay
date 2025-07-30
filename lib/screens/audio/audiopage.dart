@@ -54,6 +54,7 @@ class _AudioPageState extends State<AudioPage> {
           setState(() {
             _currentlyPlayingSong = songs[index];
           });
+          
           await _songService.incrementPlayCount(songs[index]);
         }
       }
@@ -65,7 +66,7 @@ class _AudioPageState extends State<AudioPage> {
     setState(() {
       _currentIndex = index;
     });
-    if (index != 0) {
+    if (index != 0 ) {
       _audioPlayer.pause();
     }
   }

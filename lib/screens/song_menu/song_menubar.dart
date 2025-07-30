@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
@@ -57,7 +56,7 @@ class _SongMenuPageState extends State<SongMenuPage> {
                   ? 'Added to Favorites'
                   : 'Removed from Favorites',
             ),
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 1),
           ),
         );
       }

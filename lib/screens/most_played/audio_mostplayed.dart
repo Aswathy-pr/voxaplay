@@ -17,7 +17,7 @@ class MostPlayed extends StatefulWidget {
 }
 
 class _MostPlayedState extends State<MostPlayed> {
-  int _currentIndex = 2; // Most Played tab index
+  int _currentIndex = 2; 
   final SongService _songService = SongService();
   final AudioPlayer _audioPlayer = AudioPlayerManager().player;
   late final PlayNextService _playNextService;

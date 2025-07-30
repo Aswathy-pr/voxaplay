@@ -36,7 +36,7 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
             valueListenable: Hive.box<Song>('recentlyPlayed').listenable(),
             builder: (context, box, _) {
               print('RecentlyPlayedPage: Box contains ${box.length} songs');
-              // Filter duplicates by path
+            
               final songsMap = <String, Song>{};
               for (var song in box.values) {
                 songsMap[song.path] = song;

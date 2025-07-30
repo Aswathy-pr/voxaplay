@@ -15,12 +15,13 @@ class SongService {
     _songsBox = Hive.box<Song>('songsBox');
     _recentlyPlayedBox = Hive.box<Song>('recentlyPlayed');
     _mostPlayedBox = Hive.box<Song>('mostPlayed');
-    print('SongService initialized: recentlyPlayed contains ${_recentlyPlayedBox.length} songs');
+    print(
+      'SongService initialized: recentlyPlayed contains ${_recentlyPlayedBox.length} songs',
+    );
   }
 
   Future<List<Song>> fetchSongsFromDevice() async {
     try {
-
       await _songsBox.clear();
       print('Cleared songsBox to prevent duplicates');
 
@@ -42,29 +43,34 @@ class SongService {
 
       final Map<String, Song> uniqueSongs = {};
       for (var deviceSong in deviceSongs) {
-        String path = deviceSong.data;
+        String path = deviceSong.data; 
         if (path.isEmpty) {
           print('Skipping song "${deviceSong.title}" due to empty path');
           continue;
         }
 
         if (uniqueSongs.containsKey(path)) {
-          print('Skipping duplicate song "${deviceSong.title}" with path "$path"');
+          print(
+            'Skipping duplicate song "${deviceSong.title}" with path "$path"',
+          );
           continue;
         }
 
-        Uint8List? artwork = await _audioQuery.queryArtwork(deviceSong.id, ArtworkType.AUDIO, size: 200);
+        Uint8List? artwork = await _audioQuery.queryArtwork(
+          deviceSong.id,
+          ArtworkType.AUDIO,
+          size: 200,
+        );
         Song song = Song(
           deviceSong.title,
           deviceSong.artist ?? 'Unknown Artist',
           path,
           artwork: artwork,
-          isFavorite: false, 
+          isFavorite: false,
           playcount: 0,
           playedAt: null,
         );
 
-      
         final recentlyPlayedSong = _recentlyPlayedBox.values.firstWhere(
           (s) => s.path == path,
           orElse: () => song,
@@ -78,7 +84,8 @@ class SongService {
           song.artist,
           song.path,
           artwork: song.artwork,
-          isFavorite: recentlyPlayedSong.isFavorite || mostPlayedSong.isFavorite,
+          isFavorite:
+              recentlyPlayedSong.isFavorite || mostPlayedSong.isFavorite,
           playcount: mostPlayedSong.playcount,
           playedAt: recentlyPlayedSong.playedAt,
         );
@@ -86,8 +93,9 @@ class SongService {
         uniqueSongs[path] = song;
       }
 
-     
-      await _songsBox.putAll({for (var song in uniqueSongs.values) song.path: song});
+      await _songsBox.putAll({
+        for (var song in uniqueSongs.values) song.path: song,
+      });
       final songs = uniqueSongs.values.toList();
       print('Fetched ${songs.length} unique songs');
       return songs;
@@ -99,18 +107,28 @@ class SongService {
 
   Future<void> updateFavoriteStatus(Song song) async {
     try {
-      final songIndex = _songsBox.values.toList().indexWhere((s) => s.path == song.path);
+      final songIndex = _songsBox.values.toList().indexWhere(
+        (s) => s.path == song.path,
+      );
       if (songIndex != -1) await _songsBox.putAt(songIndex, song);
 
-      final recentlyPlayedIndex = _recentlyPlayedBox.values.toList().indexWhere((s) => s.path == song.path);
-      if (recentlyPlayedIndex != -1) await _recentlyPlayedBox.putAt(recentlyPlayedIndex, song);
+      final recentlyPlayedIndex = _recentlyPlayedBox.values.toList().indexWhere(
+        (s) => s.path == song.path,
+      );
+      if (recentlyPlayedIndex != -1)
+        await _recentlyPlayedBox.putAt(recentlyPlayedIndex, song);
 
-      final mostPlayedIndex = _mostPlayedBox.values.toList().indexWhere((s) => s.path == song.path);
-      if (mostPlayedIndex != -1) await _mostPlayedBox.putAt(mostPlayedIndex, song);
+      final mostPlayedIndex = _mostPlayedBox.values.toList().indexWhere(
+        (s) => s.path == song.path,
+      );
+      if (mostPlayedIndex != -1)
+        await _mostPlayedBox.putAt(mostPlayedIndex, song);
 
       await _recentlyPlayedBox.compact();
       await _mostPlayedBox.compact();
-      print('Updated favorite status for "${song.title}" to ${song.isFavorite}, recentlyPlayed: ${_recentlyPlayedBox.length} songs');
+      print(
+        'Updated favorite status for "${song.title}" to ${song.isFavorite}, recentlyPlayed: ${_recentlyPlayedBox.length} songs',
+      );
     } catch (e) {
       print('Error updating favorite status: $e');
     }
@@ -118,7 +136,9 @@ class SongService {
 
   Future<List<Song>> getFavoriteSongs() async {
     try {
-      final favoriteSongs = _songsBox.values.where((song) => song.isFavorite).toList();
+      final favoriteSongs = _songsBox.values
+          .where((song) => song.isFavorite)
+          .toList();
       print('Fetched ${favoriteSongs.length} favorite songs');
       return favoriteSongs;
     } catch (e) {
@@ -129,12 +149,23 @@ class SongService {
 
   Future<void> incrementPlayCount(Song song) async {
     try {
-      final songIndex = _songsBox.values.toList().indexWhere((s) => s.path == song.path);
+      final songIndex = _songsBox.values.toList().indexWhere(
+        (s) => s.path == song.path,
+      );
       if (songIndex != -1) {
-        final updatedSong = Song(song.title, song.artist, song.path,
-            artwork: song.artwork, playedAt: DateTime.now(), isFavorite: song.isFavorite, playcount: song.playcount + 1);
+        final updatedSong = Song(
+          song.title,
+          song.artist,
+          song.path,
+          artwork: song.artwork,
+          playedAt: DateTime.now(),
+          isFavorite: song.isFavorite,
+          playcount: song.playcount + 1,
+        );
         await _songsBox.putAt(songIndex, updatedSong);
-        final mostPlayedIndex = _mostPlayedBox.values.toList().indexWhere((s) => s.path == song.path);
+        final mostPlayedIndex = _mostPlayedBox.values.toList().indexWhere(
+          (s) => s.path == song.path,
+        );
         if (mostPlayedIndex != -1) {
           await _mostPlayedBox.putAt(mostPlayedIndex, updatedSong);
         } else {
@@ -143,7 +174,9 @@ class SongService {
         await addToRecentlyPlayed(updatedSong);
         await _mostPlayedBox.compact();
         await _recentlyPlayedBox.compact();
-        print('Incremented play count for "${song.title}" to ${updatedSong.playcount}, recentlyPlayed: ${_recentlyPlayedBox.length} songs');
+        print(
+          'Incremented play count for "${song.title}" to ${updatedSong.playcount}, recentlyPlayed: ${_recentlyPlayedBox.length} songs',
+        );
       } else {
         print('Song "${song.title}" not found in songsBox');
       }
@@ -160,14 +193,28 @@ class SongService {
       }
 
       _recentlyAddedPaths.add(song.path);
-      Future.delayed(const Duration(seconds: 1), () => _recentlyAddedPaths.remove(song.path));
+      Future.delayed(
+        const Duration(seconds: 1),
+        () => _recentlyAddedPaths.remove(song.path),
+      );
 
-      final existingIndex = _recentlyPlayedBox.values.toList().indexWhere((s) => s.path == song.path);
-      final updatedSong = Song(song.title, song.artist, song.path,
-          artwork: song.artwork, playedAt: DateTime.now(), isFavorite: song.isFavorite, playcount: song.playcount);
+      final existingIndex = _recentlyPlayedBox.values.toList().indexWhere(
+        (s) => s.path == song.path,
+      );
+      final updatedSong = Song(
+        song.title,
+        song.artist,
+        song.path,
+        artwork: song.artwork,
+        playedAt: DateTime.now(),
+        isFavorite: song.isFavorite,
+        playcount: song.playcount,
+      );
       if (existingIndex != -1) {
         await _recentlyPlayedBox.putAt(existingIndex, updatedSong);
-        print('Updated "${song.title}" in recentlyPlayed box at index $existingIndex');
+        print(
+          'Updated "${song.title}" in recentlyPlayed box at index $existingIndex',
+        );
       } else {
         await _recentlyPlayedBox.add(updatedSong);
         print('Added "${song.title}" to recentlyPlayed box');
@@ -181,12 +228,15 @@ class SongService {
 
   Future<List<Song>> getMostPlayedSongs({int limit = 10}) async {
     try {
-      final mostPlayedSongs = _mostPlayedBox.values
-          .toList()
-          .where((song) => song.playcount > 0)
-          .toList()
-        ..sort((a, b) => b.playcount.compareTo(a.playcount));
-      print('Fetched ${mostPlayedSongs.length} most played songs from mostPlayed box');
+      final mostPlayedSongs =
+          _mostPlayedBox.values
+              .toList()
+              .where((song) => song.playcount > 0)
+              .toList()
+            ..sort((a, b) => b.playcount.compareTo(a.playcount));
+      print(
+        'Fetched ${mostPlayedSongs.length} most played songs from mostPlayed box',
+      );
       return mostPlayedSongs.take(limit).toList();
     } catch (e) {
       print('Error fetching most played songs: $e');

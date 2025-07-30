@@ -4,10 +4,7 @@ import 'package:musicvoxaplay/screens/models/video_models.dart';
 import 'package:musicvoxaplay/screens/services/video_service.dart';
 import 'package:musicvoxaplay/screens/widgets/video/video_list_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:video_player/video_player.dart';
-// import 'dart:io';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
-// import 'package:musicvoxaplay/screens/video/video_player_page.dart';
 import 'package:musicvoxaplay/screens/video/video_fullscreen.dart';
 
 class VideoPage extends StatefulWidget {
@@ -41,7 +38,7 @@ class _VideoPageState extends State<VideoPage> {
       _isLoading = true;
     });
     try {
-      // Try to load from Hive cache first
+    
       List<Video> cachedVideos = _videoService.getAllVideos();
       if (cachedVideos.isNotEmpty) {
         setState(() {
@@ -49,7 +46,7 @@ class _VideoPageState extends State<VideoPage> {
           _isLoading = false;
         });
       } else {
-        // If cache is empty, fetch from storage
+      
         final videos = await _videoService.fetchVideos();
         setState(() {
           _videosFuture = Future.value(videos);
@@ -113,7 +110,6 @@ class _VideoPageState extends State<VideoPage> {
   }
 
   Future<void> _navigateToVideoMenu(Video video) async {
-    // TODO: Implement video menu similar to song menu
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Video menu for: ${video.title}')));
@@ -178,7 +174,7 @@ class _VideoPageState extends State<VideoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: buildAppBar(context, 'All videos'),
+      appBar: buildAppBar(context, 'All videos' , showBackButton: true),
       body: SafeArea(
         child: Column(
           children: [
@@ -229,7 +225,7 @@ class _VideoPageState extends State<VideoPage> {
                           return VideoListWidget(
                             videosFuture: _videosFuture!,
                             currentVideo:
-                                null, // No current video since we removed the mini player
+                                null,
                             onVideoTap: _playVideo,
                             onMenuTap: _navigateToVideoMenu,
                             onRetry: () async {

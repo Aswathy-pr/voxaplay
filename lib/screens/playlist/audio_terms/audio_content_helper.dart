@@ -117,8 +117,7 @@ class AudioContentHelper {
           playlists: playlists,
           playlistSongsBox: playlistSongsBox,
           onDelete: (deletedName) {
-            // The provided DeletePlaylistDialog handles deletion internally
-            // and calls Navigator.pop with the deleted playlist name
+            
           },
         ),
       );

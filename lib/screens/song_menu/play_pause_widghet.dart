@@ -22,7 +22,7 @@ class _PlayPauseWidgetState extends State<PlayPauseWidget> {
   bool _isPlaying = false;
 
   @override
-  void initState() {
+  void initState() { 
     super.initState();
 
     _isPlaying =
