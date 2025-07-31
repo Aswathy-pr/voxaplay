@@ -57,12 +57,17 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                       Text(
-                    'VoxAplay..',
-                    style: TextStyle(
-                      fontSize: 36,
+                  Text(
+                    'MusicVoxaPlay',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Your Music Companion',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 500),

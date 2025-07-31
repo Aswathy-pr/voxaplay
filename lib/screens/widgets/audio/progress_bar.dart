@@ -17,11 +17,11 @@ class ProgressBar extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
-  }
+  // String _formatDuration(Duration duration) {
+  //   final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  //   final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  //   return '$minutes:$seconds';
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +30,10 @@ class ProgressBar extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            _formatDuration(position),
-            style: const TextStyle(color: AppColors.white, fontSize: 12),
+            '${position.inMinutes}:${(position.inSeconds % 60).toString().padLeft(2, '0')}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
           ),
           Expanded(
             child: Slider(
@@ -48,7 +50,7 @@ class ProgressBar extends StatelessWidget {
        IconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? AppColors.red : AppColors.white,
+              color: isFavorite ? AppColors.red : Theme.of(context).iconTheme.color,
               size: 24,
             ),
             onPressed: onFavoritePressed,

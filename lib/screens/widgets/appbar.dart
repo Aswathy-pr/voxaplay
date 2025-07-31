@@ -15,21 +15,19 @@ PreferredSizeWidget buildAppBar(
     backgroundColor: AppColors.red,
     leading: showBackButton
         ? IconButton(
-            icon: const Icon(CupertinoIcons.back, color: AppColors.white),
+            icon: Icon(CupertinoIcons.back, color: AppColors.white),
             onPressed: () => Navigator.pop(context),
           )
         : null,
     title: Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+        color: AppColors.white, // Force white text color
       ),
     ),
     actions: [
       IconButton(
-        icon: const Icon(Icons.search, color: AppColors.white),
+        icon: Icon(Icons.search, color: AppColors.white), // Force white icon color
         onPressed: () {
           Navigator.push(
             context,

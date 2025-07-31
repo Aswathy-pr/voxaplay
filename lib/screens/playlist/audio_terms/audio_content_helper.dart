@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/playlist/audio_terms/delete_playlist.dart';
 import 'package:musicvoxaplay/screens/playlist/audio_terms/playlist_detail_page.dart';
+import 'package:musicvoxaplay/screens/playlist/audio_terms/rename_playlist.dart';
 
 class AudioContentHelper {
   static Future<void> migrateOldPlaylistFormat(Box playlistSongsBox) async {
@@ -96,6 +96,82 @@ class AudioContentHelper {
     }
   }
 
+    static Future<void> handleRenamePlaylist(
+    BuildContext context,
+    Box playlistsBox,
+    Box playlistSongsBox, {
+    required VoidCallback onRefresh,
+  }) async {
+    try {
+      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      if (playlists.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No playlists to rename')),
+        );
+        return;
+      }
+
+      String? oldPlaylistName;
+      String? newPlaylistName;
+      
+      // First dialog to select playlist to rename
+      await showDialog<String>(
+        context: context,
+        builder: (context) => RenamePlaylistDialog(
+          playlists: playlists,
+          onSelect: (selectedName) {
+            oldPlaylistName = selectedName;
+          },
+        ),
+      );
+
+      if (oldPlaylistName != null && context.mounted) {
+        // Second dialog to enter new name
+        newPlaylistName = await _showRenamePlaylistDialog(context, oldPlaylistName!);
+        
+        if (newPlaylistName != null && newPlaylistName!.isNotEmpty && context.mounted) {
+          if (playlists.contains(newPlaylistName)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Playlist name already exists')),
+            );
+            return;
+          }
+
+          // Get the old playlist data
+          final oldPlaylistData = playlistSongsBox.get(oldPlaylistName!);
+          
+          // Update playlist name in playlists list
+          final updatedPlaylists = List<String>.from(playlists);
+          final index = updatedPlaylists.indexOf(oldPlaylistName!);
+          if (index != -1) {
+            updatedPlaylists[index] = newPlaylistName!;
+            await playlistsBox.put('playlists', updatedPlaylists);
+          }
+
+          // Move playlist data to new name
+          if (oldPlaylistData != null) {
+            await playlistSongsBox.put(newPlaylistName!, oldPlaylistData);
+            await playlistSongsBox.delete(oldPlaylistName!);
+          }
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Renamed playlist: $oldPlaylistName → $newPlaylistName')),
+            );
+            onRefresh();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error renaming playlist: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to rename playlist')),
+        );
+      }
+    }
+  }
+
   static Future<void> handleDeletePlaylist(
     BuildContext context,
     Box playlistsBox,
@@ -111,13 +187,14 @@ class AudioContentHelper {
         return;
       }
 
-      final deletedPlaylist = await showDialog<String>(
+      String? deletedPlaylist;
+      await showDialog<String>(
         context: context,
         builder: (context) => DeletePlaylistDialog(
           playlists: playlists,
           playlistSongsBox: playlistSongsBox,
           onDelete: (deletedName) {
-            
+            deletedPlaylist = deletedName;
           },
         ),
       );
@@ -143,13 +220,16 @@ class AudioContentHelper {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create New Playlist'),
+        title: const Text('Create New Playlist' , style: TextStyle(color: Colors.black),),
         content: TextField(
           autofocus: true,
           onChanged: (value) => playlistName = value,
+          style: const TextStyle(color: Colors.black),
           decoration: const InputDecoration(
             hintText: 'Enter playlist name',
             border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
           ),
         ),
         actions: [
@@ -164,6 +244,42 @@ class AudioContentHelper {
               }
             },
             child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Future<String?> _showRenamePlaylistDialog(BuildContext context, String currentName) async {
+    String newPlaylistName = currentName;
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Playlist', style: TextStyle(color: Colors.black),),
+        content: TextField(
+          autofocus: true,
+          controller: TextEditingController(text: currentName),
+          onChanged: (value) => newPlaylistName = value,
+          style: const TextStyle(color: Colors.black),
+          decoration: const InputDecoration(
+            hintText: 'Enter new playlist name',
+            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (newPlaylistName.isNotEmpty) {
+                Navigator.pop(context, newPlaylistName);
+              }
+            },
+            child: const Text('Rename'),
           ),
         ],
       ),

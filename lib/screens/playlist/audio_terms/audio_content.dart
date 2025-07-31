@@ -180,12 +180,27 @@ class _AudioContentState extends State<AudioContent> {
                           PlaylistButtonWidget(
                             icon: Icons.add,
                             label: 'Create New Playlist',
+                          
                             onTap: () =>
                                 AudioContentHelper.handleCreatePlaylist(
                                   context,
                                   _playlistsBox,
                                   _playlistSongsBox,
                                   widget.currentSong,
+                                ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Rename playlist
+                          PlaylistButtonWidget(
+                            icon: Icons.edit,
+                            label: 'Rename Playlist',
+                            onTap: () =>
+                                AudioContentHelper.handleRenamePlaylist(
+                                  context,
+                                  _playlistsBox,
+                                  _playlistSongsBox,
+                                  onRefresh: () => setState(() {}),
                                 ),
                           ),
                           const SizedBox(height: 20),

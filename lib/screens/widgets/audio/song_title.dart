@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:musicvoxaplay/screens/widgets/colors.dart';
+
 
 class SongTitle extends StatelessWidget {
   final String title;
@@ -14,9 +14,7 @@ class SongTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 24,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
@@ -25,10 +23,8 @@ class SongTitle extends StatelessWidget {
         // Artist 
         Text(
           artist,
-          style: const TextStyle(
-            color: AppColors.grey,
-            fontSize: 16,
-            fontWeight: FontWeight.normal,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
           ),
           textAlign: TextAlign.center,
         ),

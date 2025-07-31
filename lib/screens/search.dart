@@ -64,7 +64,7 @@ class _SearchpageState extends State<Searchpage> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Search songs or artists',
-                hintStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium!.color),
+                hintStyle: TextStyle(color: Colors.black),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surfaceContainer,
                 border: OutlineInputBorder(
@@ -73,10 +73,12 @@ class _SearchpageState extends State<Searchpage> {
                 ),
                 prefixIcon: Icon(
                   Icons.search,
-                  color: Theme.of(context).textTheme.bodyLarge!.color,
+                  color: Colors.black,
+                  
                 ),
+
               ),
-              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge!.color),
+              style: TextStyle(color: Colors.black),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -153,7 +155,7 @@ class _SearchpageState extends State<Searchpage> {
                           style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                 color: isPlayable
                                     ? Theme.of(context).textTheme.bodyLarge!.color
-                                    : AppColors.grey,
+                                    : AppColors.black,
                               ),
                         ),
                         subtitle: Text(

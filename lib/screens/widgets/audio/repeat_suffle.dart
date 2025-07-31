@@ -30,7 +30,7 @@ class PlaybackOptions extends StatelessWidget {
                 width: 2,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              backgroundColor: AppColors.black,
+              backgroundColor: Colors.grey[500],
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -45,10 +45,9 @@ class PlaybackOptions extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'repeat',
-                  style: TextStyle(
-                    color: isRepeat ? AppColors.red : AppColors.grey,
-                    fontSize: 14,
+                  'Repeat',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
               ],
@@ -66,7 +65,7 @@ class PlaybackOptions extends StatelessWidget {
                 width: 2,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              backgroundColor: AppColors.black,
+              backgroundColor: AppColors.grey,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -81,10 +80,9 @@ class PlaybackOptions extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'shuffle',
-                  style: TextStyle(
-                    color: isShuffle ? AppColors.red : AppColors.grey,
-                    fontSize: 14,
+                  'Shuffle',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
               ],

@@ -31,12 +31,16 @@ class MiniPlayerWidget extends StatelessWidget {
               : const Icon(Icons.music_note, size: 40, color: AppColors.white),
           title: Text(
             song.title,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
             song.artist,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+            ),
             overflow: TextOverflow.ellipsis,
           ),
           trailing: Row(

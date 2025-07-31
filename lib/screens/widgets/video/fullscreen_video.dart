@@ -243,10 +243,8 @@ class _VideoFullscreenWidgetState extends State<VideoFullscreenWidget> {
                 quarterTurns: 1,
                 child: Text(
                   widget.currentTime,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
               ),
@@ -311,7 +309,9 @@ class _VideoFullscreenWidgetState extends State<VideoFullscreenWidget> {
                       children: [
                         Text(
                           widget.currentTime,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
                         ),
                         Expanded(
                           child: VideoProgressIndicator(
@@ -326,7 +326,9 @@ class _VideoFullscreenWidgetState extends State<VideoFullscreenWidget> {
                         ),
                         Text(
                           widget.totalTime,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
                         ),
                       ],
                     ),

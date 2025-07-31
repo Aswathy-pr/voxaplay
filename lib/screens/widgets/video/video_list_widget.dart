@@ -80,18 +80,11 @@ class VideoListWidget extends StatelessWidget {
                 ),
                 title: Text(
                   video.title,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        color: isPlayable ? Theme.of(context).textTheme.bodyLarge!.color : AppColors.grey,
-                      ),
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 subtitle: Text(
-                  video.duration != null 
-                      ? _formatDuration(video.duration!)
-                      : 'Unknown duration',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: isPlayable ? Theme.of(context).textTheme.bodyMedium!.color : AppColors.grey,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+                  video.duration != null ? _formatDuration(video.duration!) : 'Unknown duration',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
