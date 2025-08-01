@@ -129,7 +129,7 @@ class AudioContentHelper {
         // Second dialog to enter new name
         newPlaylistName = await _showRenamePlaylistDialog(context, oldPlaylistName!);
         
-        if (newPlaylistName != null && newPlaylistName!.isNotEmpty && context.mounted) {
+        if (newPlaylistName != null && newPlaylistName.isNotEmpty && context.mounted) {
           if (playlists.contains(newPlaylistName)) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Playlist name already exists')),
@@ -144,13 +144,13 @@ class AudioContentHelper {
           final updatedPlaylists = List<String>.from(playlists);
           final index = updatedPlaylists.indexOf(oldPlaylistName!);
           if (index != -1) {
-            updatedPlaylists[index] = newPlaylistName!;
+            updatedPlaylists[index] = newPlaylistName;
             await playlistsBox.put('playlists', updatedPlaylists);
           }
 
           // Move playlist data to new name
           if (oldPlaylistData != null) {
-            await playlistSongsBox.put(newPlaylistName!, oldPlaylistData);
+            await playlistSongsBox.put(newPlaylistName, oldPlaylistData);
             await playlistSongsBox.delete(oldPlaylistName!);
           }
 

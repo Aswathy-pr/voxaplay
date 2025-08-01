@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/services/song_service.dart';
 import 'package:musicvoxaplay/screens/song_menu/playnext_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/song_menu/play_pause_widghet.dart';
+import 'package:musicvoxaplay/screens/song_menu/add_to_playlist.dart';
 
 class SongMenuPage extends StatefulWidget {
   final Song song;
@@ -120,6 +122,93 @@ class _SongMenuPageState extends State<SongMenuPage> {
     }
   }
 
+  Future<void> _addToPlaylist() async {
+    try {
+      // Open Hive boxes
+      final playlistsBox = await Hive.openBox('playlistsBox');
+      final playlistSongsBox = await Hive.openBox('playlistSongsBox');
+      
+      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      
+      if (playlists.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.red[900],
+              content: Text('No playlists available. Create a playlist first.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show playlist selection dialog
+      String? selectedPlaylist;
+      await showDialog<String>(
+        context: context,
+        builder: (context) => AddToPlaylistDialog(
+          playlists: playlists,
+          onSelect: (playlistName) {
+            selectedPlaylist = playlistName;
+          },
+        ),
+      );
+
+      if (selectedPlaylist != null && mounted) {
+        // Get current playlist data
+        final playlistData = playlistSongsBox.get(selectedPlaylist);
+        List<String> songs = [];
+        
+        if (playlistData != null && playlistData['songs'] != null) {
+          songs = List<String>.from(playlistData['songs']);
+        }
+
+        // Check if song is already in playlist
+        if (songs.contains(_song.path)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: Colors.red[900],
+                content: Text('Song is already in "$selectedPlaylist"'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Add song to playlist
+        songs.add(_song.path);
+        await playlistSongsBox.put(selectedPlaylist, {
+          'songs': songs,
+          'createdAt': playlistData?['createdAt'] ?? DateTime.now().toString(),
+          'updatedAt': DateTime.now().toString(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.red[900],
+              content: Text('Added "${_song.title}" to "$selectedPlaylist"'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red[900],
+            content: Text('Error adding to playlist: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -187,6 +276,12 @@ class _SongMenuPageState extends State<SongMenuPage> {
                     _song.isFavorite ? Icons.favorite : Icons.favorite_border,
                     _song.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
                     onTap: _toggleFavorite,
+                  ),
+                  _buildMenuItem(
+                    context,
+                    Icons.playlist_add,
+                    'Add to Playlist',
+                    onTap: _addToPlaylist,
                   ),
                 ],
               ),
