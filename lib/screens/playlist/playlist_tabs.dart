@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
 import 'package:musicvoxaplay/screens/playlist/audio_terms/audio_content.dart'; 
+import 'package:musicvoxaplay/screens/playlist/video_terms/video_content.dart';
 import 'package:musicvoxaplay/screens/widgets/colors.dart';
 
 class PlaylistPage extends StatefulWidget {
@@ -48,7 +49,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
         body: const TabBarView(
           children: [
             AudioContent(), 
-            Center(child: Text('Video Content', style: TextStyle(color: AppColors.white))),
+            VideoContent(),
           ],
         ),
         bottomNavigationBar: buildBottomNavigationBar(

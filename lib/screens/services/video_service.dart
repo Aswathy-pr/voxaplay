@@ -11,6 +11,8 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoService {
   static const String _boxName = 'videoBox'; 
+  static const String _mostPlayedBoxName = 'mostPlayedVideos';
+  static const String _recentlyPlayedBoxName = 'recentlyPlayedVideos';
 
   
   Future<Box<Video>> _getBox() async {
@@ -18,6 +20,20 @@ class VideoService {
       await Hive.openBox<Video>(_boxName);
     }
     return Hive.box<Video>(_boxName);
+  }
+
+  Future<Box<Video>> _getMostPlayedBox() async {
+    if (!Hive.isBoxOpen(_mostPlayedBoxName)) {
+      await Hive.openBox<Video>(_mostPlayedBoxName);
+    }
+    return Hive.box<Video>(_mostPlayedBoxName);
+  }
+
+  Future<Box<Video>> _getRecentlyPlayedBox() async {
+    if (!Hive.isBoxOpen(_recentlyPlayedBoxName)) {
+      await Hive.openBox<Video>(_recentlyPlayedBoxName);
+    }
+    return Hive.box<Video>(_recentlyPlayedBoxName);
   }
 
   Future<Video?> _createVideoFromFile(File file) async {
@@ -271,5 +287,109 @@ class VideoService {
       return Hive.box<Video>(_boxName).values.toList();
     }
     return []; 
+  }
+
+  // Get most played videos
+  Future<List<Video>> getMostPlayedVideos() async {
+    try {
+      final box = await _getMostPlayedBox();
+      final videos = box.values.toList();
+      videos.sort((a, b) => b.playcount.compareTo(a.playcount));
+      return videos;
+    } catch (e) {
+      print('Error getting most played videos: $e');
+      return [];
+    }
+  }
+
+  // Get recently played videos
+  Future<List<Video>> getRecentlyPlayedVideos() async {
+    try {
+      final box = await _getRecentlyPlayedBox();
+      final videos = box.values.toList();
+      videos.sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));
+      return videos;
+    } catch (e) {
+      print('Error getting recently played videos: $e');
+      return [];
+    }
+  }
+
+  // Increment play count for a video
+  Future<void> incrementPlayCount(Video video) async {
+    try {
+      final box = await _getBox();
+      final mostPlayedBox = await _getMostPlayedBox();
+      final recentlyPlayedBox = await _getRecentlyPlayedBox();
+
+      // Find the video in the main box
+      final videoIndex = box.values.toList().indexWhere(
+        (v) => v.path == video.path,
+      );
+      
+      if (videoIndex != -1) {
+        final updatedVideo = Video(
+          title: video.title,
+          path: video.path,
+          duration: video.duration,
+          thumbnail: video.thumbnail,
+          playedAt: DateTime.now(),
+          isFavorite: video.isFavorite,
+          playcount: video.playcount + 1,
+        );
+        
+        await box.putAt(videoIndex, updatedVideo);
+        
+        // Update in most played box
+        final mostPlayedIndex = mostPlayedBox.values.toList().indexWhere(
+          (v) => v.path == video.path,
+        );
+        if (mostPlayedIndex != -1) {
+          await mostPlayedBox.putAt(mostPlayedIndex, updatedVideo);
+        } else {
+          await mostPlayedBox.add(updatedVideo);
+        }
+        
+        // Add to recently played
+        await addToRecentlyPlayed(updatedVideo);
+        
+        await mostPlayedBox.compact();
+        await recentlyPlayedBox.compact();
+        
+        print('Incremented play count for "${video.title}" to ${updatedVideo.playcount}');
+      } else {
+        print('Video "${video.title}" not found in videoBox');
+      }
+    } catch (e) {
+      print('Error incrementing play count: $e');
+    }
+  }
+
+  // Add video to recently played
+  Future<void> addToRecentlyPlayed(Video video) async {
+    try {
+      final box = await _getRecentlyPlayedBox();
+      
+      // Remove existing entry if it exists
+      final existingIndex = box.values.toList().indexWhere(
+        (v) => v.path == video.path,
+      );
+      if (existingIndex != -1) {
+        await box.deleteAt(existingIndex);
+      }
+      
+      // Add to the beginning
+      await box.add(video);
+      
+      // Keep only the last 50 videos
+      if (box.length > 50) {
+        final videos = box.values.toList();
+        videos.sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));
+        await box.clear();
+        await box.addAll(videos.take(50));
+      }
+    } catch (e) {
+      print('Error adding to recently played: $e');
+    }
   }
 }

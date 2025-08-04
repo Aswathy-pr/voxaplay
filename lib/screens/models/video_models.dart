@@ -6,12 +6,18 @@ class Video {
   final String path;
   final Duration? duration;
   final Uint8List? thumbnail;
+  final DateTime? playedAt;
+  final int playcount;
+  final bool isFavorite;
 
   Video({
     required this.title, 
     required this.path, 
     this.duration, 
-    this.thumbnail
+    this.thumbnail,
+    this.playedAt,
+    this.playcount = 0,
+    this.isFavorite = false,
   }) {
     if (path.isEmpty) {
       throw ArgumentError('Video path cannot be empty');
@@ -22,13 +28,19 @@ class Video {
     String? title, 
     String? path, 
     Duration? duration, 
-    Uint8List? thumbnail
+    Uint8List? thumbnail,
+    DateTime? playedAt,
+    int? playcount,
+    bool? isFavorite,
   }) {
    return Video(
     title: title ?? this.title,
     path: path ?? this.path,
     duration: duration ?? this.duration,
     thumbnail: thumbnail ?? this.thumbnail,
+    playedAt: playedAt ?? this.playedAt,
+    playcount: playcount ?? this.playcount,
+    isFavorite: isFavorite ?? this.isFavorite,
   );
   }
 
@@ -37,6 +49,9 @@ class Video {
     'path': path, 
     'duration': duration?.inMilliseconds,
     'thumbnail': thumbnail?.toList(),
+    'playedAt': playedAt?.toIso8601String(),
+    'playcount': playcount,
+    'isFavorite': isFavorite,
   };
 
   static Video fromJson(Map<String, dynamic> json) {
@@ -48,6 +63,9 @@ class Video {
       path: json['path'],
       duration: json['duration'] != null ? Duration(milliseconds: json['duration']) : null,
       thumbnail: json['thumbnail'] != null ? Uint8List.fromList(List<int>.from(json['thumbnail'])) : null,
+      playedAt: json['playedAt'] != null ? DateTime.parse(json['playedAt']) : null,
+      playcount: json['playcount'] ?? 0,
+      isFavorite: json['isFavorite'] ?? false,
     );
   }
 }

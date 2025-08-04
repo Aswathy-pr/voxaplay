@@ -1,0 +1,289 @@
+import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:musicvoxaplay/screens/models/video_models.dart';
+import 'package:musicvoxaplay/screens/playlist/video_terms/delete_video_playlist.dart';
+import 'package:musicvoxaplay/screens/playlist/video_terms/video_playlist_detail_page.dart';
+import 'package:musicvoxaplay/screens/playlist/video_terms/rename_video_playlist.dart';
+
+
+class VideoContentHelper {
+  static Future<void> migrateOldPlaylistFormat(Box playlistVideosBox) async {
+    final keys = playlistVideosBox.keys.toList();
+    for (final key in keys) {
+      final data = playlistVideosBox.get(key);
+      if (data is Map) {
+        if (!data.containsKey('videos')) {
+          final videos = data[key] is List<dynamic>
+              ? List<String>.from(data[key] as List<dynamic>)
+              : [];
+          await playlistVideosBox.put(key, {
+            'videos': videos,
+            'createdAt': DateTime.now().toString(),
+            'updatedAt': DateTime.now().toString(),
+          });
+        }
+      } else {
+        await playlistVideosBox.put(key, {
+          'videos': [],
+          'createdAt': DateTime.now().toString(),
+          'updatedAt': DateTime.now().toString(),
+        });
+      }
+    }
+  }
+
+  static void navigateTo(BuildContext context, Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+  }
+
+  static void navigateToPlaylist(BuildContext context, String playlistName, Box playlistVideosBox) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoPlaylistDetailPage(
+          playlistName: playlistName,
+          playlistVideosBox: playlistVideosBox,
+        ),
+      ),
+    );
+  }
+
+  static Future<void> handleCreatePlaylist(
+    BuildContext context,
+    Box playlistsBox,
+    Box playlistVideosBox,
+    Video? currentVideo,
+  ) async {
+    try {
+      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      if (playlists.length >= 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Maximum 3 playlists allowed')),
+        );
+        return;
+      }
+
+      final newPlaylistName = await _showCreatePlaylistDialog(context);
+      if (newPlaylistName == null || newPlaylistName.isEmpty) return;
+
+      if (playlists.contains(newPlaylistName)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Playlist already exists')),
+        );
+        return;
+      }
+
+      await playlistsBox.put('playlists', [...playlists, newPlaylistName]);
+
+      if (currentVideo != null) {
+        await playlistVideosBox.put(newPlaylistName, {
+          'videos': [currentVideo.path],
+          'createdAt': DateTime.now().toString(),
+        });
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Created playlist: $newPlaylistName')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error creating playlist: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to create playlist')),
+        );
+      }
+    }
+  }
+
+  static Future<void> handleRenamePlaylist(
+    BuildContext context,
+    Box playlistsBox,
+    Box playlistVideosBox, {
+    required VoidCallback onRefresh,
+  }) async {
+    try {
+      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      if (playlists.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No playlists to rename')),
+        );
+        return;
+      }
+
+      String? oldPlaylistName;
+      String? newPlaylistName;
+      
+      // First dialog to select playlist to rename
+      await showDialog<String>(
+        context: context,
+        builder: (context) => RenameVideoPlaylistDialog(
+          playlists: playlists,
+          onSelect: (selectedName) {
+            oldPlaylistName = selectedName;
+          },
+        ),
+      );
+
+      if (oldPlaylistName != null && context.mounted) {
+        // Second dialog to enter new name
+        newPlaylistName = await _showRenamePlaylistDialog(context, oldPlaylistName!);
+        
+        if (newPlaylistName != null && newPlaylistName.isNotEmpty && context.mounted) {
+          if (playlists.contains(newPlaylistName)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Playlist name already exists')),
+            );
+            return;
+          }
+
+          // Get the old playlist data
+          final oldPlaylistData = playlistVideosBox.get(oldPlaylistName!);
+          
+          // Update playlist name in playlists list
+          final updatedPlaylists = List<String>.from(playlists);
+          final index = updatedPlaylists.indexOf(oldPlaylistName!);
+          if (index != -1) {
+            updatedPlaylists[index] = newPlaylistName;
+            await playlistsBox.put('playlists', updatedPlaylists);
+          }
+
+          // Move playlist data to new name
+          if (oldPlaylistData != null) {
+            await playlistVideosBox.put(newPlaylistName, oldPlaylistData);
+            await playlistVideosBox.delete(oldPlaylistName!);
+          }
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Renamed playlist: $oldPlaylistName → $newPlaylistName')),
+            );
+            onRefresh();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error renaming playlist: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to rename playlist')),
+        );
+      }
+    }
+  }
+
+  static Future<void> handleDeletePlaylist(
+    BuildContext context,
+    Box playlistsBox,
+    Box playlistVideosBox, {
+    required VoidCallback onRefresh,
+  }) async {
+    try {
+      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      if (playlists.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No playlists to delete')),
+        );
+        return;
+      }
+
+      String? deletedPlaylist;
+      await showDialog<String>(
+        context: context,
+        builder: (context) => DeleteVideoPlaylistDialog(
+          playlists: playlists,
+          playlistVideosBox: playlistVideosBox,
+          onDelete: (deletedName) {
+            deletedPlaylist = deletedName;
+          },
+        ),
+      );
+
+      if (deletedPlaylist != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Deleted playlist: $deletedPlaylist')),
+        );
+        onRefresh();
+      }
+    } catch (e) {
+      debugPrint('Error deleting playlist: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete playlist')),
+        );
+      }
+    }
+  }
+
+  static Future<String?> _showCreatePlaylistDialog(BuildContext context) async {
+    String playlistName = '';
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Video Playlist', style: TextStyle(color: Colors.black),),
+        content: TextField(
+          autofocus: true,
+          onChanged: (value) => playlistName = value,
+          style: const TextStyle(color: Colors.black),
+          decoration: const InputDecoration(
+            hintText: 'Enter playlist name',
+            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (playlistName.isNotEmpty) {
+                Navigator.pop(context, playlistName);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Future<String?> _showRenamePlaylistDialog(BuildContext context, String currentName) async {
+    String newPlaylistName = currentName;
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Video Playlist', style: TextStyle(color: Colors.black),),
+        content: TextField(
+          autofocus: true,
+          controller: TextEditingController(text: currentName),
+          onChanged: (value) => newPlaylistName = value,
+          style: const TextStyle(color: Colors.black),
+          decoration: const InputDecoration(
+            hintText: 'Enter new playlist name',
+            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (newPlaylistName.isNotEmpty) {
+                Navigator.pop(context, newPlaylistName);
+              }
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+} 

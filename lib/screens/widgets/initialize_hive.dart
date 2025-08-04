@@ -14,6 +14,11 @@ Future<void> initializeHive() async {
     await Hive.openBox('playlistsBox');
     await Hive.openBox('playlistSongsBox');
     await Hive.openBox<Video>('videoBox');
+    await Hive.openBox<Video>('mostPlayedVideos');
+    await Hive.openBox<Video>('recentlyPlayedVideos');
+    await Hive.openBox<Video>('videoFavoritesBox');
+    await Hive.openBox('videoPlaylistsBox');
+    await Hive.openBox('videoPlaylistVideosBox');
 
     final playlistsBox = Hive.box('playlistsBox');
 
@@ -32,6 +37,18 @@ Future<void> initializeHive() async {
     final videoBox = Hive.box<Video>('videoBox');
     if (videoBox.isEmpty) {
       log('initialized video with ${videoBox.length} videos.');
+    }
+
+    final videoPlaylistsBox = Hive.box('videoPlaylistsBox');
+    if (videoPlaylistsBox.isEmpty) {
+      await videoPlaylistsBox.put('playlists', []);
+      log('Initialized videoPlaylistsBox with empty playlists list.');
+    }
+
+    final videoPlaylistVideosBox = Hive.box('videoPlaylistVideosBox');
+    if (videoPlaylistVideosBox.isEmpty) {
+      await videoPlaylistVideosBox.put('playlistVideosBox', {});
+      log('Initialized videoPlaylistVideosBox with empty map.');
     }
 
     // Migrate any invalid data during initialization
@@ -85,4 +102,9 @@ Future<void> clearHiveData() async {
   await Hive.box('playlistSongsBox').clear();
 
   await Hive.box<Video>('videoBox').clear();
+  await Hive.box<Video>('mostPlayedVideos').clear();
+  await Hive.box<Video>('recentlyPlayedVideos').clear();
+  await Hive.box<Video>('videoFavoritesBox').clear();
+  await Hive.box('videoPlaylistsBox').clear();
+  await Hive.box('videoPlaylistVideosBox').clear();
 }
