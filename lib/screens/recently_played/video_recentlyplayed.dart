@@ -34,6 +34,11 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
             valueListenable: Hive.box<Video>('recentlyPlayedVideos').listenable(),
             builder: (context, box, _) {
               print('VideoRecentlyPlayedPage: Box contains ${box.length} videos');
+              
+              // Debug: Print all videos in the box
+              for (var video in box.values) {
+                print('Video in box: ${video.title} - ${video.playedAt}');
+              }
             
               final videosMap = <String, Video>{};
               for (var video in box.values) {
@@ -41,6 +46,8 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
               }
               final videos = videosMap.values.toList()
                 ..sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));
+              
+              print('Sorted videos count: ${videos.length}');
 
               if (videos.isEmpty) {
                 return Center(
@@ -65,6 +72,11 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               color: Colors.grey,
                             ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => setState(() {}),
+                        child: const Text('Refresh'),
                       ),
                     ],
                   ),
@@ -152,7 +164,7 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                 builder: (context) => VideoFullScreen(
+                                                                  builder: (context) => VideoFullScreen(
                                   videos: videos,
                                   initialIndex: videos.indexOf(video),
                                 ),

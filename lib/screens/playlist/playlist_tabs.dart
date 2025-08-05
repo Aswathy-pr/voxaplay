@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
-import 'package:musicvoxaplay/screens/playlist/audio_terms/audio_content.dart'; 
-import 'package:musicvoxaplay/screens/playlist/video_terms/video_content.dart';
+import 'package:musicvoxaplay/screens/playlist/audio_terms/audio_content.dart';
 import 'package:musicvoxaplay/screens/widgets/colors.dart';
+import 'package:musicvoxaplay/screens/playlist/video_terms/video_content.dart';
 
 class PlaylistPage extends StatefulWidget {
   const PlaylistPage({super.key});
@@ -29,17 +29,14 @@ class _PlaylistPageState extends State<PlaylistPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: buildAppBar(
           context,
-          'Playlists' ,showBackButton: true,
+          'Playlists',
+          showBackButton: true,
           bottom: const TabBar(
             labelColor: AppColors.white,
             unselectedLabelColor: AppColors.white,
             indicatorColor: AppColors.white,
-            labelStyle: TextStyle(
-              fontSize: 20,
-            ),
-            unselectedLabelStyle: TextStyle(
-              fontSize: 18,
-            ),
+            labelStyle: TextStyle(fontSize: 20),
+            unselectedLabelStyle: TextStyle(fontSize: 18),
             tabs: [
               Tab(text: 'Audio'),
               Tab(text: 'Video'),
@@ -48,8 +45,8 @@ class _PlaylistPageState extends State<PlaylistPage> {
         ),
         body: const TabBarView(
           children: [
-            AudioContent(), 
-            VideoContent(),
+            AudioContent(),
+            VideoContent(), // Replaced placeholder with VideoContent
           ],
         ),
         bottomNavigationBar: buildBottomNavigationBar(
@@ -60,7 +57,4 @@ class _PlaylistPageState extends State<PlaylistPage> {
       ),
     );
   }
-}   
-
-
-
+}

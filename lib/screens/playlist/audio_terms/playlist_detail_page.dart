@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
-import 'package:musicvoxaplay/screens/widgets/colors.dart';
 import 'package:musicvoxaplay/screens/playlist/audio_terms/add_selected_song.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
+import 'package:musicvoxaplay/screens/widgets/colors.dart';
 
 class PlaylistDetailPage extends StatefulWidget {
   final String playlistName;
@@ -53,9 +53,14 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Removed song from ${widget.playlistName}'),
+        content: Text(
+          'Removed song from ${widget.playlistName}',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         action: SnackBarAction(
           label: 'Undo',
+          textColor: Theme.of(context).colorScheme.primary,
           onPressed: () async {
             updatedSongs.insert(index, removedSong);
             await widget.playlistSongsBox.put(widget.playlistName, {
@@ -73,7 +78,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildAppBar(context, widget.playlistName, showBackButton: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,16 +98,15 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   children: [
                     Text(
                       'Songs in Playlist',
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       '(${playlistSongs.length})',
-                      style: TextStyle(color: AppColors.grey, fontSize: 16),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -116,15 +120,12 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                               Icon(
                                 Icons.playlist_add,
                                 size: 60,
-                                color: AppColors.grey.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No songs in this playlist yet',
-                                style: TextStyle(
-                                  color: AppColors.grey,
-                                  fontSize: 16,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
                           ),
@@ -144,7 +145,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
-                              color: AppColors.grey.withOpacity(0.1),
+                              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
@@ -164,33 +165,28 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                                         width: 50,
                                         height: 50,
                                         decoration: BoxDecoration(
-                                          color: AppColors.grey.withOpacity(
-                                            0.3,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
+                                          color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Icon(
                                           Icons.music_note,
-                                          color: AppColors.white,
+                                          color: Theme.of(context).textTheme.bodyLarge!.color,
                                         ),
                                       ),
                                 title: Text(
                                   song.title,
-                                  style: TextStyle(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
                                 subtitle: Text(
                                   song.artist,
-                                  style: TextStyle(color: AppColors.grey),
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 trailing: IconButton(
                                   icon: Icon(
                                     Icons.remove_circle,
-                                    color: AppColors.red,
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                   onPressed: () => _removeSong(index),
                                 ),
@@ -218,23 +214,24 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.red,
-                    foregroundColor: AppColors.white,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.add, size: 24),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'Add New Songs',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:TextStyle(
+                          color: AppColors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -244,7 +241,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
             );
           },
         ),
-     ),
-);
-}
+      ),
+    );
+  }
 }

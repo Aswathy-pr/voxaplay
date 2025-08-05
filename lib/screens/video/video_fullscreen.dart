@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:io';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
+import 'package:musicvoxaplay/screens/services/video_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/video/rotation.dart';
 import 'package:musicvoxaplay/screens/widgets/video/fullscreen.dart';
@@ -26,6 +27,8 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
   bool _isInitialized = false;
   bool _isPlaying = false;
   bool _showControls = true;
+  bool _hasUpdatedRecentlyPlayed = false;
+  final VideoService _videoService = VideoService();
 
   @override
   void initState() {
@@ -43,6 +46,13 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
             });
             _controller.play();
             _updatePlayingState();
+            // Update recently played when video starts
+            if (!_hasUpdatedRecentlyPlayed) {
+              _updateRecentlyPlayed(widget.videos[_currentIndex]);
+              _hasUpdatedRecentlyPlayed = true;
+            }
+          }).catchError((error) {
+            print('Error initializing video controller: $error');
           });
   }
 
@@ -54,6 +64,15 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
         });
       }
     });
+  }
+
+  Future<void> _updateRecentlyPlayed(Video video) async {
+    try {
+      await _videoService.incrementPlayCount(video);
+      print('Updated recently played for video: ${video.title}');
+    } catch (e) {
+      print('Error updating recently played: $e');
+    }
   }
 
   void _togglePlayPause() {
@@ -68,6 +87,7 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
       setState(() {
         _currentIndex++;
         _isInitialized = false;
+        _hasUpdatedRecentlyPlayed = false;
       });
       _controller.dispose();
       _initializeController();
@@ -79,6 +99,7 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
       setState(() {
         _currentIndex--;
         _isInitialized = false;
+        _hasUpdatedRecentlyPlayed = false;
       });
       _controller.dispose();
       _initializeController();

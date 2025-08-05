@@ -8,9 +8,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:musicvoxaplay/screens/widgets/audio/mini_player_widget.dart';
 import 'package:musicvoxaplay/screens/widgets/audio/song_list_widgets.dart';
 import 'package:musicvoxaplay/screens/audio/audio_playermanager.dart';
-import 'package:musicvoxaplay/screens/song_menu/song_menubar.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/song_menubar.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:musicvoxaplay/screens/song_menu/playnext_service.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/playnext_service.dart';
 
 class AudioPage extends StatefulWidget {
   const AudioPage({super.key});

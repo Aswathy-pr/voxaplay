@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // await clearHiveData();
-  // log('clear is done');
+
   await initializeHive();
 
   runApp(const MyApp());

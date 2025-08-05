@@ -3,10 +3,10 @@ import 'package:just_audio/just_audio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/services/song_service.dart';
-import 'package:musicvoxaplay/screens/song_menu/playnext_service.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/playnext_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
-import 'package:musicvoxaplay/screens/song_menu/play_pause_widghet.dart';
-import 'package:musicvoxaplay/screens/song_menu/add_to_playlist.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/play_pause_widghet.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/add_to_playlist.dart';
 
 class SongMenuPage extends StatefulWidget {
   final Song song;

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
-import 'package:musicvoxaplay/screens/widgets/colors.dart';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
 import 'package:musicvoxaplay/screens/video/video_fullscreen.dart';
+import 'package:musicvoxaplay/screens/playlist/video_terms/add_selected_video.dart';
+import 'package:musicvoxaplay/screens/widgets/colors.dart';
 
 class VideoPlaylistDetailPage extends StatefulWidget {
   final String playlistName;
@@ -16,7 +17,8 @@ class VideoPlaylistDetailPage extends StatefulWidget {
   });
 
   @override
-  State<VideoPlaylistDetailPage> createState() => _VideoPlaylistDetailPageState();
+  State<VideoPlaylistDetailPage> createState() =>
+      _VideoPlaylistDetailPageState();
 }
 
 class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
@@ -53,9 +55,14 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Removed video from ${widget.playlistName}'),
+        content: Text(
+          'Removed video from ${widget.playlistName}',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         action: SnackBarAction(
           label: 'Undo',
+          textColor: Theme.of(context).colorScheme.primary,
           onPressed: () async {
             updatedVideos.insert(index, removedVideo);
             await widget.playlistVideosBox.put(widget.playlistName, {
@@ -73,7 +80,7 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildAppBar(context, widget.playlistName, showBackButton: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,16 +100,15 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                   children: [
                     Text(
                       'Videos in Playlist',
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       '(${playlistVideos.length})',
-                      style: TextStyle(color: AppColors.grey, fontSize: 16),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -116,15 +122,12 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                               Icon(
                                 Icons.playlist_add,
                                 size: 60,
-                                color: AppColors.grey.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No videos in this playlist yet',
-                                style: TextStyle(
-                                  color: AppColors.grey,
-                                  fontSize: 16,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
                           ),
@@ -143,7 +146,7 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
-                              color: AppColors.grey.withOpacity(0.1),
+                              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
@@ -163,30 +166,25 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                                         width: 50,
                                         height: 50,
                                         decoration: BoxDecoration(
-                                          color: AppColors.grey.withOpacity(
-                                            0.3,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
+                                          color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Icon(
                                           Icons.video_library,
-                                          color: AppColors.white,
+                                          color: Theme.of(context).textTheme.bodyLarge!.color,
                                         ),
                                       ),
                                 title: Text(
                                   video.title,
-                                  style: TextStyle(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
                                 subtitle: Text(
-                                  video.duration != null 
+                                  video.duration != null
                                       ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
                                       : 'Unknown duration',
-                                  style: TextStyle(color: AppColors.grey),
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -194,30 +192,45 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                                     IconButton(
                                       icon: Icon(
                                         Icons.play_arrow,
-                                        color: AppColors.white,
+                                        color: Theme.of(context).textTheme.bodyLarge!.color,
                                       ),
                                       onPressed: () async {
                                         try {
-                                          final allVideos = playlistVideos.map((path) {
+                                          final allVideos = playlistVideos.map((
+                                            path,
+                                          ) {
                                             return videosBox.values.firstWhere(
                                               (v) => v.path == path,
-                                              orElse: () => Video(title: 'Unknown', path: path),
+                                              orElse: () => Video(
+                                                title: 'Unknown',
+                                                path: path,
+                                              ),
                                             );
                                           }).toList();
-                                          
+
                                           await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => VideoFullScreen(
-                                                videos: allVideos,
-                                                initialIndex: allVideos.indexOf(video),
-                                              ),
+                                              builder: (context) =>
+                                                  VideoFullScreen(
+                                                    videos: allVideos,
+                                                    initialIndex: allVideos
+                                                        .indexOf(video),
+                                                  ),
                                             ),
                                           );
                                         } catch (e) {
                                           if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Error playing video: $e')),
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Error playing video: $e',
+                                                  style: Theme.of(context).textTheme.bodyLarge,
+                                                ),
+                                                backgroundColor: Theme.of(context).colorScheme.error,
+                                              ),
                                             );
                                           }
                                         }
@@ -226,7 +239,7 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                                     IconButton(
                                       icon: Icon(
                                         Icons.remove_circle,
-                                        color: AppColors.red,
+                                        color: Theme.of(context).colorScheme.error,
                                       ),
                                       onPressed: () => _removeVideo(index),
                                     ),
@@ -234,26 +247,39 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                                 ),
                                 onTap: () async {
                                   try {
-                                    final allVideos = playlistVideos.map((path) {
+                                    final allVideos = playlistVideos.map((
+                                      path,
+                                    ) {
                                       return videosBox.values.firstWhere(
                                         (v) => v.path == path,
-                                        orElse: () => Video(title: 'Unknown', path: path),
+                                        orElse: () =>
+                                            Video(title: 'Unknown', path: path),
                                       );
                                     }).toList();
-                                    
+
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => VideoFullScreen(
                                           videos: allVideos,
-                                          initialIndex: allVideos.indexOf(video),
+                                          initialIndex: allVideos.indexOf(
+                                            video,
+                                          ),
                                         ),
                                       ),
                                     );
                                   } catch (e) {
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error playing video: $e')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Error playing video: $e',
+                                            style: Theme.of(context).textTheme.bodyLarge,
+                                          ),
+                                          backgroundColor: Theme.of(context).colorScheme.error,
+                                        ),
                                       );
                                     }
                                   }
@@ -266,30 +292,37 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () async {
-                    // TODO: Implement add videos to playlist functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Add videos functionality coming soon')),
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddSelectedVideoPage(
+                          playlistName: widget.playlistName,
+                          playlistVideosBox: widget.playlistVideosBox,
+                        ),
+                      ),
                     );
+                    // No need to call _loadPlaylistVideos() since ValueListenableBuilder handles updates
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.red,
-                    foregroundColor: AppColors.white,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.add, size: 24),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'Add New Videos',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                          color: AppColors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -299,7 +332,7 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
             );
           },
         ),
-     ),
-);
+      ),
+    );
+  }
 }
-} 

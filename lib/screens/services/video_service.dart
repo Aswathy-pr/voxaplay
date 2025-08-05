@@ -14,7 +14,6 @@ class VideoService {
   static const String _mostPlayedBoxName = 'mostPlayedVideos';
   static const String _recentlyPlayedBoxName = 'recentlyPlayedVideos';
 
-  
   Future<Box<Video>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
       await Hive.openBox<Video>(_boxName);
@@ -80,6 +79,9 @@ class VideoService {
         path: file.path,
         duration: duration,
         thumbnail: thumbnail,
+        isFavorite: false, // Default to false
+        playcount: 0,
+        playedAt: null,
       );
       
       print("Created video:  [38;5;2m");
@@ -133,11 +135,10 @@ class VideoService {
     }
   }
 
-  // Fetch videos 
   Future<List<Video>> fetchVideos() async {
     List<Video> videos = [];
     try {
-   ("Starting video fetch...");
+      print("Starting video fetch...");
       
       // Request permissions
       final storagePermission = await Permission.storage.request();
@@ -213,7 +214,6 @@ class VideoService {
     return [];
   }
 
-  // Fetch videos using file picker only
   Future<List<Video>> fetchVideosWithPicker() async {
     List<Video> videos = [];
     try {
@@ -231,7 +231,7 @@ class VideoService {
         return videos;
       }
 
-      //  prevent duplicates
+      // Prevent duplicates
       final box = await _getBox();
       await box.clear();
       print("Cleared existing videos from Hive");
@@ -273,7 +273,6 @@ class VideoService {
     return [];
   }
 
-  // Export videos to JSON
   Future<String> exportVideosToJson() async {
     final box = await _getBox();
     final videos = box.values.toList();
@@ -281,7 +280,6 @@ class VideoService {
     return jsonEncode(jsonList);
   }
 
-  // Get all videos from Hive
   List<Video> getAllVideos() {
     if (Hive.isBoxOpen(_boxName)) {
       return Hive.box<Video>(_boxName).values.toList();
@@ -289,7 +287,6 @@ class VideoService {
     return []; 
   }
 
-  // Get most played videos
   Future<List<Video>> getMostPlayedVideos() async {
     try {
       final box = await _getMostPlayedBox();
@@ -302,7 +299,6 @@ class VideoService {
     }
   }
 
-  // Get recently played videos
   Future<List<Video>> getRecentlyPlayedVideos() async {
     try {
       final box = await _getRecentlyPlayedBox();
@@ -315,60 +311,108 @@ class VideoService {
     }
   }
 
-  // Increment play count for a video
   Future<void> incrementPlayCount(Video video) async {
     try {
       final box = await _getBox();
       final mostPlayedBox = await _getMostPlayedBox();
       final recentlyPlayedBox = await _getRecentlyPlayedBox();
 
+      // Create updated video with current timestamp and incremented play count
+      final updatedVideo = Video(
+        title: video.title,
+        path: video.path,
+        duration: video.duration,
+        thumbnail: video.thumbnail,
+        playedAt: DateTime.now(),
+        isFavorite: video.isFavorite,
+        playcount: video.playcount + 1,
+      );
+      
       // Find the video in the main box
       final videoIndex = box.values.toList().indexWhere(
         (v) => v.path == video.path,
       );
       
       if (videoIndex != -1) {
-        final updatedVideo = Video(
-          title: video.title,
-          path: video.path,
-          duration: video.duration,
-          thumbnail: video.thumbnail,
-          playedAt: DateTime.now(),
-          isFavorite: video.isFavorite,
-          playcount: video.playcount + 1,
-        );
-        
         await box.putAt(videoIndex, updatedVideo);
-        
-        // Update in most played box
-        final mostPlayedIndex = mostPlayedBox.values.toList().indexWhere(
-          (v) => v.path == video.path,
-        );
-        if (mostPlayedIndex != -1) {
-          await mostPlayedBox.putAt(mostPlayedIndex, updatedVideo);
-        } else {
-          await mostPlayedBox.add(updatedVideo);
-        }
-        
-        // Add to recently played
-        await addToRecentlyPlayed(updatedVideo);
-        
-        await mostPlayedBox.compact();
-        await recentlyPlayedBox.compact();
-        
-        print('Incremented play count for "${video.title}" to ${updatedVideo.playcount}');
       } else {
-        print('Video "${video.title}" not found in videoBox');
+        // If video not in main box, add it
+        await box.put(video.path, updatedVideo);
       }
+      
+      // Update in most played box
+      final mostPlayedIndex = mostPlayedBox.values.toList().indexWhere(
+        (v) => v.path == video.path,
+      );
+      if (mostPlayedIndex != -1) {
+        await mostPlayedBox.putAt(mostPlayedIndex, updatedVideo);
+      } else {
+        await mostPlayedBox.add(updatedVideo);
+      }
+      
+      // Add to recently played
+      await addToRecentlyPlayed(updatedVideo);
+      
+      await mostPlayedBox.compact();
+      await recentlyPlayedBox.compact();
+      
+      print('Incremented play count for "${video.title}" to ${updatedVideo.playcount}');
     } catch (e) {
       print('Error incrementing play count: $e');
     }
   }
 
-  // Add video to recently played
+  Future<void> updateFavoriteStatus(Video video) async {
+    try {
+      final box = await _getBox(); // Use videoBox instead of videoFavoritesBox
+      final videoIndex = box.values.toList().indexWhere(
+        (v) => v.path == video.path,
+      );
+      if (videoIndex != -1) {
+        final existingVideo = box.getAt(videoIndex)!;
+        final updatedVideo = Video(
+          title: existingVideo.title,
+          path: existingVideo.path,
+          duration: existingVideo.duration,
+          thumbnail: existingVideo.thumbnail,
+          isFavorite: !existingVideo.isFavorite, // Toggle isFavorite
+          playcount: existingVideo.playcount,
+          playedAt: existingVideo.playedAt,
+        );
+        await box.putAt(videoIndex, updatedVideo);
+        print('Updated favorite status for "${updatedVideo.title}" to ${updatedVideo.isFavorite} in videoBox');
+      } else {
+        print('Video "${video.title}" not found in videoBox');
+      }
+    } catch (e) {
+      print('Error updating favorite status: $e');
+    }
+  }
+
+  Future<List<Video>> getFavoriteVideos() async {
+    try {
+      final box = await _getBox();
+      if (box.isEmpty) {
+        print('videoBox is empty');
+        return [];
+      }
+      final favoriteVideos = box.values
+          .where((video) => video.isFavorite ?? false) // Handle null isFavorite
+          .toList();
+      print('Fetched ${favoriteVideos.length} favorite videos');
+      return favoriteVideos;
+    } catch (e) {
+      print('Error fetching favorite videos: $e');
+      return [];
+    }
+  }
+
   Future<void> addToRecentlyPlayed(Video video) async {
     try {
       final box = await _getRecentlyPlayedBox();
+      
+      print('Adding video to recently played: ${video.title}');
+      print('Current box length: ${box.length}');
       
       // Remove existing entry if it exists
       final existingIndex = box.values.toList().indexWhere(
@@ -376,10 +420,13 @@ class VideoService {
       );
       if (existingIndex != -1) {
         await box.deleteAt(existingIndex);
+        print('Removed existing video at index: $existingIndex');
       }
       
-      // Add to the beginning
-      await box.add(video);
+      // Add to the beginning by using a unique key
+      final key = DateTime.now().millisecondsSinceEpoch.toString();
+      await box.put(key, video);
+      print('Added video to recently played box. New length: ${box.length}');
       
       // Keep only the last 50 videos
       if (box.length > 50) {
@@ -387,6 +434,7 @@ class VideoService {
         videos.sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));
         await box.clear();
         await box.addAll(videos.take(50));
+        print('Trimmed recently played to 50 videos');
       }
     } catch (e) {
       print('Error adding to recently played: $e');

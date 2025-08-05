@@ -1,76 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:musicvoxaplay/screens/models/song_models.dart';
+import 'package:musicvoxaplay/screens/models/video_models.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 
 
-class AddSongsPage extends StatefulWidget {
+class AddSelectedVideoPage extends StatefulWidget {
   final String playlistName;
-  final Box playlistSongsBox;
+  final Box playlistVideosBox;
 
-  const AddSongsPage({
+  const AddSelectedVideoPage({
     super.key,
     required this.playlistName,
-    required this.playlistSongsBox,
+    required this.playlistVideosBox,
   });
 
   @override
-  State<AddSongsPage> createState() => _AddSongsPageState();
+  State<AddSelectedVideoPage> createState() => _AddSelectedVideoPageState();
 }
 
-class _AddSongsPageState extends State<AddSongsPage> {
-  late Box<Song> songsBox;
-  List<String> playlistSongs = [];
+class _AddSelectedVideoPageState extends State<AddSelectedVideoPage> {
+  late Box<Video> videosBox;
+  List<String> playlistVideos = [];
   bool showRecentlyPlayed = false;
   String searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    songsBox = Hive.box<Song>('songsBox');
-    _loadPlaylistSongs();
+    videosBox = Hive.box<Video>('videoBox');
+    _loadPlaylistVideos();
   }
 
-  void _loadPlaylistSongs() {
-    final playlistData = widget.playlistSongsBox.get(widget.playlistName);
-    if (playlistData != null && playlistData['songs'] != null) {
+  void _loadPlaylistVideos() {
+    final playlistData = widget.playlistVideosBox.get(widget.playlistName);
+    if (playlistData != null && playlistData['videos'] != null) {
       setState(() {
-        playlistSongs = List<String>.from(playlistData['songs'] ?? []);
+        playlistVideos = List<String>.from(playlistData['videos'] ?? []);
       });
     }
   }
 
-  List<Song> _filterSongs(List<Song> allSongs) {
-    var filtered = allSongs.where((song) =>
-        song.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        song.artist.toLowerCase().contains(searchQuery.toLowerCase()));
+  List<Video> _filterVideos(List<Video> allVideos) {
+    var filtered = allVideos.where(
+      (video) => video.title.toLowerCase().contains(searchQuery.toLowerCase()),
+    );
 
     if (showRecentlyPlayed) {
-      filtered = filtered.where((song) => song.playedAt != null);
+      filtered = filtered.where((video) => video.playedAt != null);
     }
 
     return filtered.toList();
   }
 
-  Future<void> _toggleSongInPlaylist(Song song) async {
-    final playlistData = widget.playlistSongsBox.get(widget.playlistName) ?? {};
-    final currentSongs = List<String>.from(playlistData['songs'] ?? []);
+  Future<void> _toggleVideoInPlaylist(Video video) async {
+    final playlistData =
+        widget.playlistVideosBox.get(widget.playlistName) ?? {};
+    final currentVideos = List<String>.from(playlistData['videos'] ?? []);
 
     setState(() {
-      if (currentSongs.contains(song.path)) {
-        currentSongs.remove(song.path);
+      if (currentVideos.contains(video.path)) {
+        currentVideos.remove(video.path);
       } else {
-        currentSongs.add(song.path);
+        currentVideos.add(video.path);
       }
     });
 
-    await widget.playlistSongsBox.put(widget.playlistName, {
+    await widget.playlistVideosBox.put(widget.playlistName, {
       ...playlistData,
-      'songs': currentSongs,
+      'videos': currentVideos,
       'updatedAt': DateTime.now().toIso8601String(),
     });
 
-    _loadPlaylistSongs();
+    _loadPlaylistVideos();
   }
 
   @override
@@ -79,7 +80,7 @@ class _AddSongsPageState extends State<AddSongsPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildAppBar(
         context,
-        'Add Songs to ${widget.playlistName}',
+        'Add Videos to ${widget.playlistName}',
         showBackButton: true,
       ),
       body: Padding(
@@ -90,7 +91,7 @@ class _AddSongsPageState extends State<AddSongsPage> {
             TextField(
               onChanged: (value) => setState(() => searchQuery = value),
               decoration: InputDecoration(
-                hintText: 'Search songs...',
+                hintText: 'Search videos...',
                 hintStyle: Theme.of(context).textTheme.bodyMedium,
                 prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyLarge!.color),
                 filled: true,
@@ -108,7 +109,8 @@ class _AddSongsPageState extends State<AddSongsPage> {
               children: [
                 Checkbox(
                   value: showRecentlyPlayed,
-                  onChanged: (value) => setState(() => showRecentlyPlayed = value ?? false),
+                  onChanged: (value) =>
+                      setState(() => showRecentlyPlayed = value ?? false),
                   fillColor: MaterialStateProperty.resolveWith<Color>(
                     (states) => states.contains(MaterialState.selected)
                         ? Theme.of(context).colorScheme.primary
@@ -122,7 +124,7 @@ class _AddSongsPageState extends State<AddSongsPage> {
                 ),
                 const Spacer(),
                 Text(
-                  '${playlistSongs.length} songs in playlist',
+                  '${playlistVideos.length} videos in playlist',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -131,25 +133,27 @@ class _AddSongsPageState extends State<AddSongsPage> {
 
             Expanded(
               child: ValueListenableBuilder(
-                valueListenable: songsBox.listenable(),
-                builder: (context, Box<Song> box, _) {
-                  final allSongs = box.values.toList();
-                  final displayedSongs = _filterSongs(allSongs);
+                valueListenable: videosBox.listenable(),
+                builder: (context, Box<Video> box, _) {
+                  final allVideos = box.values.toList();
+                  final displayedVideos = _filterVideos(allVideos);
 
-                  return displayedSongs.isEmpty
+                  return displayedVideos.isEmpty
                       ? Center(
                           child: Text(
                             searchQuery.isEmpty
-                                ? 'No songs available'
-                                : 'No matching songs found',
+                                ? 'No videos available'
+                                : 'No matching videos found',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         )
                       : ListView.builder(
-                          itemCount: displayedSongs.length,
+                          itemCount: displayedVideos.length,
                           itemBuilder: (context, index) {
-                            final song = displayedSongs[index];
-                            final isInPlaylist = playlistSongs.contains(song.path);
+                            final video = displayedVideos[index];
+                            final isInPlaylist = playlistVideos.contains(
+                              video.path,
+                            );
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
@@ -159,11 +163,11 @@ class _AddSongsPageState extends State<AddSongsPage> {
                                   horizontal: 12,
                                   vertical: 8,
                                 ),
-                                leading: song.artwork != null
+                                leading: video.thumbnail != null
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(4),
                                         child: Image.memory(
-                                          song.artwork!,
+                                          video.thumbnail!,
                                           width: 50,
                                           height: 50,
                                           fit: BoxFit.cover,
@@ -177,32 +181,21 @@ class _AddSongsPageState extends State<AddSongsPage> {
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Icon(
-                                          Icons.music_note,
+                                          Icons.video_library,
                                           color: Theme.of(context).textTheme.bodyLarge!.color,
                                         ),
                                       ),
                                 title: Text(
-                                  song.title,
+                                  video.title,
                                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                         fontWeight: FontWeight.w500,
                                       ),
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      song.artist,
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                    ),
-                                    if (song.playedAt != null)
-                                      Text(
-                                        'Played ${song.playedAt!.toString().split(' ')[0]}',
-                                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                                              fontSize: 12,
-                                            ),
-                                      ),
-                                  ],
+                                subtitle: Text(
+                                  video.duration != null
+                                      ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
+                                      : 'Unknown duration',
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 trailing: IconButton(
                                   icon: Icon(
@@ -212,7 +205,7 @@ class _AddSongsPageState extends State<AddSongsPage> {
                                         : Theme.of(context).colorScheme.primary,
                                     size: 24,
                                   ),
-                                  onPressed: () => _toggleSongInPlaylist(song),
+                                  onPressed: () => _toggleVideoInPlaylist(video),
                                 ),
                               ),
                             );

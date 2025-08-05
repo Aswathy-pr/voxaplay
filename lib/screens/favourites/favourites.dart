@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/services/song_service.dart';
-import 'package:musicvoxaplay/screens/song_menu/playnext_service.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/playnext_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
 import 'package:musicvoxaplay/screens/widgets/colors.dart';
 import 'package:musicvoxaplay/screens/audio/audio_fullscreen.dart';
 import 'package:musicvoxaplay/screens/audio/audio_playermanager.dart';
-import 'package:musicvoxaplay/screens/song_menu/song_menubar.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/song_menubar.dart';
 import 'package:just_audio/just_audio.dart';
 
 class Favourites extends StatefulWidget {

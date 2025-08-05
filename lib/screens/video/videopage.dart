@@ -110,47 +110,38 @@ class _VideoPageState extends State<VideoPage> {
     }
   }
 
-  Future<void> _navigateToVideoMenu(Video video) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VideoMenuPage(video: video),
+Future<void> _navigateToVideoMenu(Video video) async {
+  final allVideos = await _videosFuture!; // Fetch all videos from the future
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => VideoMenuPage(
+        video: video,
+        videoService: _videoService, // Use the existing VideoService instance
+        allVideos: allVideos, // Pass all videos
       ),
-    );
-    
-    if (result != null && mounted) {
-      switch (result) {
-        case 'play':
-          _playVideo(video, [video]);
-          break;
-        case 'favorite':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added ${video.title} to favorites')),
-          );
-          break;
-        case 'playlist':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Add to playlist functionality coming soon')),
-          );
-          break;
-        case 'share':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Share functionality coming soon')),
-          );
-          break;
-        case 'info':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Video info: ${video.title}')),
-          );
-          break;
-        case 'delete':
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Delete functionality coming soon')),
-          );
-          break;
-      }
+    ),
+  );
+  
+  if (result != null && mounted) {
+    switch (result) {
+      case 'play':
+        _playVideo(video, allVideos); // Use all videos for playback
+        break;
+      case 'favorite':
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added ${video.title} to favorites')),
+        );
+        break;
+      case 'playlist':
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Add to playlist functionality coming soon')),
+        );
+        break;
+   
     }
   }
+}
 
   Widget _buildNoVideosFound() {
     return Center(
@@ -290,3 +281,5 @@ class _VideoPageState extends State<VideoPage> {
     super.dispose();
   }
 }
+
+

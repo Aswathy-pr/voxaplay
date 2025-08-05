@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+ import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
+import 'package:musicvoxaplay/screens/services/video_service.dart';
 import 'package:musicvoxaplay/screens/video/video_fullscreen.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
+import 'package:musicvoxaplay/screens/widgets/colors.dart';
+import 'package:musicvoxaplay/screens/menubars/video_menubar/video_menu_page.dart';
 
 class VideoFavourites extends StatefulWidget {
   const VideoFavourites({super.key});
@@ -13,7 +15,8 @@ class VideoFavourites extends StatefulWidget {
 }
 
 class _VideoFavouritesState extends State<VideoFavourites> {
-  int _currentIndex = 2; 
+  int _currentIndex = 2;
+  final VideoService _videoService = VideoService();
 
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
@@ -22,187 +25,184 @@ class _VideoFavouritesState extends State<VideoFavourites> {
     });
   }
 
+ void _toggleFavorite(Video video) async {
+    if (!mounted) return; // Prevent operation if widget is disposed
+
+    final updatedVideo = Video(
+      title: video.title,
+      path: video.path,
+      duration: video.duration,
+      thumbnail: video.thumbnail,
+      isFavorite: !video.isFavorite, // Toggle the value
+      playcount: video.playcount,
+      playedAt: video.playedAt,
+    );
+
+    setState(() {
+      // Update the local state with the new instance
+      // Note: This is for UI reflection; the actual update happens in videoBox
+    });
+
+    try {
+      await _videoService.updateFavoriteStatus(updatedVideo);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating favorite: $e')),
+        );
+      }
+      // Roll back to the original state if update fails
+      setState(() {
+        // No need to toggle back here; rely on the original video state
+      });
+      print('Error in _toggleFavorite: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildAppBar(context, 'Video Favourites', showBackButton: true),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 16.0),
-          child: ValueListenableBuilder<Box<Video>>(
-            valueListenable: Hive.box<Video>('videoFavoritesBox').listenable(),
-            builder: (context, box, _) {
-              print('VideoFavourites: Box contains ${box.length} videos');
-            
-              final videos = box.values.toList();
-
-              if (videos.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.favorite_border,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No favourite videos',
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                              fontSize: 20,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add videos to favourites to see them here',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Colors.grey,
-                            ),
-                      ),
-                    ],
+      body: FutureBuilder<List<Video>>(
+        future: _videoService.getFavoriteVideos(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            print('Error in FutureBuilder: ${snapshot.error}');
+            return Center(
+              child: Text(
+                'Error loading favourites: ${snapshot.error}',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  
+                  const SizedBox(height: 16),
+                  Text(
+                    'Favourites list is empty',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontSize: 15,
+                        ),
                   ),
-                );
-              }
+                
+                ],
+              ),
+            );
+          }
 
-              return ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: videos.length,
-                itemBuilder: (context, index) {
-                  final video = videos[index];
-                  final isPlayable = video.path.isNotEmpty;
+          final videos = snapshot.data!;
+          return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: videos.length,
+            itemBuilder: (context, index) {
+              final video = videos[index];
+              final isPlayable = video.path.isNotEmpty;
 
-                  return ListTile(
-                    leading: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey[300],
+              return ListTile(
+                leading: video.thumbnail != null && video.thumbnail!.isNotEmpty
+                    ? Image.memory(
+                        video.thumbnail!,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      )
+                    : Icon(
+                        Icons.video_library,
+                        size: 50,
+                        color: Theme.of(context).textTheme.bodyLarge!.color,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: video.thumbnail != null
-                            ? Image.memory(
-                                video.thumbnail!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.video_library,
-                                    color: Colors.grey,
-                                  );
-                                },
-                              )
-                            : const Icon(
-                                Icons.video_library,
-                                color: Colors.grey,
+                title: Text(
+                  video.title,
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    color: isPlayable
+                        ? Theme.of(context).textTheme.bodyLarge!.color
+                        : AppColors.grey,
+                  ),
+                ),
+                subtitle: Text(
+                  video.duration != null
+                      ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
+                      : 'Unknown duration',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: isPlayable
+                        ? Theme.of(context).textTheme.bodyMedium!.color
+                        : AppColors.grey,
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        video.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: video.isFavorite ? AppColors.red : Theme.of(context).textTheme.bodyLarge!.color,
+                        size: 20.0,
+                      ),
+                      onPressed: () => _toggleFavorite(video),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 8.0),
+                    IconButton(
+                      icon: Icon(
+                        Icons.more_horiz,
+                        color: Theme.of(context).textTheme.bodyLarge!.color,
+                        size: 20.0,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VideoMenuPage(
+                              video: video,
+                              videoService: _videoService,
+                              allVideos: videos,
+                            ),
+                          ),
+                        ).then((_) {
+                          setState(() {});
+                        });
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                onTap: isPlayable
+                    ? () async {
+                        try {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VideoFullScreen(
+                                videos: videos,
+                                initialIndex: index,
                               ),
-                      ),
-                    ),
-                    title: Text(
-                      video.title,
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      video.duration != null 
-                          ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
-                          : 'Unknown duration',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.play_arrow),
-                          onPressed: isPlayable
-                              ? () async {
-                                  try {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => VideoFullScreen(
-                                          videos: videos,
-                                          initialIndex: videos.indexOf(video),
-                                        ),
-                                      ),
-                                    );
-                                    setState(() {});
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error playing video: $e')),
-                                      );
-                                    }
-                                  }
-                                }
-                              : null,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.favorite, color: Colors.red),
-                          onPressed: () async {
-                            try {
-                              await box.delete(video.path);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Removed ${video.title} from favourites')),
-                                );
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error removing from favourites: $e')),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    onTap: isPlayable
-                        ? () async {
-                            try {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                                                  builder: (context) => VideoFullScreen(
-                                  videos: videos,
-                                  initialIndex: videos.indexOf(video),
-                                ),
-                                ),
-                              );
-                              setState(() {});
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error playing video: $e')),
-                                );
-                              }
-                            }
-                          }
-                        : null,
-                  );
-                },
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error playing video: $e')),
+                          );
+                        }
+                      }
+                    : null,
               );
             },
-          ),
-        ),
+          );
+        },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
+      bottomNavigationBar: buildBottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        context: context,
+      ),
     );
   }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return buildBottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: _onTabTapped,
-      context: context,
-    );
-  }
-} 
+}
