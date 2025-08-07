@@ -26,21 +26,20 @@ class _VideoFavouritesState extends State<VideoFavourites> {
   }
 
  void _toggleFavorite(Video video) async {
-    if (!mounted) return; // Prevent operation if widget is disposed
+    if (!mounted) return;
 
     final updatedVideo = Video(
       title: video.title,
       path: video.path,
       duration: video.duration,
       thumbnail: video.thumbnail,
-      isFavorite: !video.isFavorite, // Toggle the value
+      isFavorite: !video.isFavorite, 
       playcount: video.playcount,
       playedAt: video.playedAt,
     );
 
     setState(() {
-      // Update the local state with the new instance
-      // Note: This is for UI reflection; the actual update happens in videoBox
+     
     });
 
     try {
@@ -51,9 +50,9 @@ class _VideoFavouritesState extends State<VideoFavourites> {
           SnackBar(content: Text('Error updating favorite: $e')),
         );
       }
-      // Roll back to the original state if update fails
+     
       setState(() {
-        // No need to toggle back here; rely on the original video state
+       
       });
       print('Error in _toggleFavorite: $e');
     }

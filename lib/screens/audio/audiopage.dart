@@ -47,6 +47,7 @@ class _AudioPageState extends State<AudioPage> {
         });
       }
     });
+    
     _audioPlayer.currentIndexStream.listen((index) async {
       if (index != null && mounted) {
         final songs = AudioPlayerManager().songs;
