@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:io';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
-import 'package:musicvoxaplay/screens/services/video_service.dart';
+import 'package:musicvoxaplay/screens/services/video_service/video_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/video/rotation.dart';
 import 'package:musicvoxaplay/screens/widgets/video/fullscreen.dart';
+import 'package:musicvoxaplay/screens/widgets/video/video_controllers.dart';
+import 'package:musicvoxaplay/screens/widgets/video/video_progress_row.dart';
 
 class VideoFullScreen extends StatefulWidget {
   final List<Video> videos;
@@ -40,20 +42,22 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
   void _initializeController() {
     _controller =
         VideoPlayerController.file(File(widget.videos[_currentIndex].path))
-          ..initialize().then((_) {
-            setState(() {
-              _isInitialized = true;
-            });
-            _controller.play();
-            _updatePlayingState();
-            // Update recently played when video starts
-            if (!_hasUpdatedRecentlyPlayed) {
-              _updateRecentlyPlayed(widget.videos[_currentIndex]);
-              _hasUpdatedRecentlyPlayed = true;
-            }
-          }).catchError((error) {
-            print('Error initializing video controller: $error');
-          });
+          ..initialize()
+              .then((_) {
+                setState(() {
+                  _isInitialized = true;
+                });
+                _controller.play();
+                _updatePlayingState();
+                // Update recently played when video starts
+                if (!_hasUpdatedRecentlyPlayed) {
+                  _updateRecentlyPlayed(widget.videos[_currentIndex]);
+                  _hasUpdatedRecentlyPlayed = true;
+                }
+              })
+              .catchError((error) {
+                print('Error initializing video controller: $error');
+              });
   }
 
   void _updatePlayingState() {
@@ -144,8 +148,10 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: VideoFullscreenService.isFullscreen ? null : buildAppBar(context, 'Video', showBackButton: true),
-      body: VideoFullscreenService.isFullscreen 
+      appBar: VideoFullscreenService.isFullscreen
+          ? null
+          : buildAppBar(context, 'Video', showBackButton: true),
+      body: VideoFullscreenService.isFullscreen
           ? _buildFullscreenView()
           : _buildNormalView(),
     );
@@ -162,7 +168,7 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
               : const Center(
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
-          
+
           // Fullscreen controls overlay
           if (_showControls && _isInitialized)
             Positioned(
@@ -175,94 +181,24 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Progress bar with time display
-                    Row(
-                      children: [
-                        Text(
-                          _formatDuration(_controller.value.position),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: VideoProgressIndicator(
-                            _controller,
-                            allowScrubbing: true,
-                            colors: VideoProgressColors(
-                              playedColor: Colors.red,
-                              backgroundColor: Colors.white24,
-                              bufferedColor: Colors.white54,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Text(
-                          _formatDuration(_controller.value.duration),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
+                   
+                    VideoProgressRow(
+                      controller: _controller,
+                      formatDuration: _formatDuration,
                     ),
+
                     const SizedBox(height: 1),
-                    // Playback controls
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            VideoRotationService.isLandscape ? Icons.screen_rotation : Icons.screen_rotation_alt,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          onPressed: _toggleRotation,
-                        ),
-                        const SizedBox(width: 10),
-                        IconButton(
-                          icon: Icon(
-                            Icons.skip_previous,
-                            color: Colors.white,
-                            size: 35,
-                          ),
-                          onPressed: _currentIndex > 0 ? _playPrevious : null,
-                        ),
-                        const SizedBox(width: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              _isPlaying ? Icons.pause : Icons.play_arrow,
-                              color: Colors.white,
-                              size: 45,
-                            ),
-                            onPressed: _isInitialized ? _togglePlayPause : null,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        IconButton(
-                          icon: Icon(
-                            Icons.skip_next,
-                            color: Colors.white,
-                            size: 35,
-                          ),
-                          onPressed: _currentIndex < widget.videos.length - 1 ? _playNext : null,
-                        ),
-                        const SizedBox(width: 10),
-                        IconButton(
-                          icon: Icon(
-                            Icons.fullscreen_exit,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          onPressed: _toggleFullscreen,
-                        ),
-                      ],
+
+                    VideoControls(
+                      isPlaying: _isPlaying,
+                      isInitialized: _isInitialized,
+                      currentIndex: _currentIndex,
+                      totalVideos: widget.videos.length,
+                      onPlayPause: _togglePlayPause,
+                      onNext: _playNext,
+                      onPrevious: _playPrevious,
+                      onToggleRotation: _toggleRotation,
+                      onToggleFullscreen: _toggleFullscreen,
                     ),
                   ],
                 ),
@@ -290,7 +226,7 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
                   ),
           ),
         ),
-        
+
         // Fixed Controls Section (always visible)
         Container(
           color: Colors.black,
@@ -298,116 +234,26 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Progress bar with time display on sides
-              Row(
-                children: [
-                  // Current time (left side)
-                  Text(
-                    _isInitialized ? _formatDuration(_controller.value.position) : '00:00',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                    ),
-                  ),
-                  
-                  const SizedBox(width: 5),
-                  
-                  // Progress bar (center)
-                  Expanded(
-                    child: VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      colors: VideoProgressColors(
-                        playedColor: Colors.red,
-                        backgroundColor: Colors.white24,
-                        bufferedColor: Colors.white54,
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(width: 14),
-                  
-                  // Total duration (right side)
-                  Text(
-                    _isInitialized ? _formatDuration(_controller.value.duration) : '00:00',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              
+           
+              _isInitialized
+                  ? VideoProgressRow(
+                      controller: _controller,
+                      formatDuration: _formatDuration,
+                    )
+                  : const SizedBox.shrink(),
+
               const SizedBox(height: 1),
-              
-              // Playback controls (rotation, previous, play/pause, next, fullscreen)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Rotation button
-                  IconButton(
-                    icon: Icon(
-                      VideoRotationService.isLandscape ? Icons.screen_rotation : Icons.screen_rotation_alt,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: _toggleRotation,
-                  ),
-                  
-                  const SizedBox(width: 10),
-                  
-                  // Previous button
-                  IconButton(
-                    icon: Icon(
-                      Icons.skip_previous,
-                      color: Colors.white,
-                      size: 35,
-                    ),
-                    onPressed: _currentIndex > 0 ? _playPrevious : null,
-                  ),
-                  
-                  const SizedBox(width: 20),
-                  
-                  // Play/Pause button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        _isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
-                        size: 45,
-                      ),
-                      onPressed: _isInitialized ? _togglePlayPause : null,
-                    ),
-                  ),
-                  
-                  const SizedBox(width: 20),
-                  
-                  // Next button
-                  IconButton(
-                    icon: Icon(
-                      Icons.skip_next,
-                      color: Colors.white,
-                      size: 35,
-                    ),
-                    onPressed: _currentIndex < widget.videos.length - 1 ? _playNext : null,
-                  ),
-                  
-                  const SizedBox(width: 10),
-                  
-                  // Fullscreen button
-                  IconButton(
-                    icon: Icon(
-                      Icons.fullscreen,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: _toggleFullscreen,
-                  ),
-                ],
+
+              VideoControls(
+                isPlaying: _isPlaying,
+                isInitialized: _isInitialized,
+                currentIndex: _currentIndex,
+                totalVideos: widget.videos.length,
+                onPlayPause: _togglePlayPause,
+                onNext: _playNext,
+                onPrevious: _playPrevious,
+                onToggleRotation: _toggleRotation,
+                onToggleFullscreen: _toggleFullscreen,
               ),
             ],
           ),

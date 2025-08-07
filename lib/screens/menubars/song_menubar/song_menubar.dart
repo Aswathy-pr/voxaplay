@@ -7,6 +7,9 @@ import 'package:musicvoxaplay/screens/menubars/song_menubar/playnext_service.dar
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/menubars/song_menubar/play_pause_widghet.dart';
 import 'package:musicvoxaplay/screens/menubars/song_menubar/add_to_playlist.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/song_menu_item.dart';
+import 'package:musicvoxaplay/screens/menubars/song_menubar/favourite_service.dart';
+
 
 class SongMenuPage extends StatefulWidget {
   final Song song;
@@ -27,109 +30,20 @@ class SongMenuPage extends StatefulWidget {
 }
 
 class _SongMenuPageState extends State<SongMenuPage> {
-  late Song _song; 
+  late Song _song;
 
   @override
   void initState() {
     super.initState();
-    _song = widget.song; 
-  }
-
-  Future<void> _toggleFavorite() async {
-    try {
-      setState(() {
-        _song = Song(
-          _song.title,
-          _song.artist,
-          _song.path,
-          artwork: _song.artwork,
-          isFavorite: !_song.isFavorite, 
-          playcount: _song.playcount,
-          playedAt: _song.playedAt,
-        );
-      });
-      await widget.songService.updateFavoriteStatus(_song); 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red[900],
-            content: Text(
-              _song.isFavorite
-                  ? 'Added to Favorites'
-                  : 'Removed from Favorites',
-            ),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-
-      setState(() {
-        _song = Song(
-          _song.title,
-          _song.artist,
-          _song.path,
-          artwork: _song.artwork,
-          isFavorite: !_song.isFavorite, 
-          playcount: _song.playcount,
-          playedAt: _song.playedAt,
-        );
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating favorite: $e'),
-            backgroundColor: Colors.red[900],
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _playNextSong() async {
-    try {
-      final nextSong = await widget.playNextService.playNext(_song);
-      if (nextSong != null && mounted) {
-        setState(() {
-          _song = nextSong; 
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red[900],
-            content: Text('Playing next song: "${nextSong.title}"'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red[900],
-            content: const Text('No next song available'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red[900],
-            content: Text('Error playing next song: $e'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
+    _song = widget.song;
   }
 
   Future<void> _addToPlaylist() async {
     try {
-      // Open Hive boxes
       final playlistsBox = await Hive.openBox('playlistsBox');
       final playlistSongsBox = await Hive.openBox('playlistSongsBox');
-      
       final playlists = playlistsBox.get('playlists', defaultValue: [])!;
-      
+
       if (playlists.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +57,6 @@ class _SongMenuPageState extends State<SongMenuPage> {
         return;
       }
 
-      // Show playlist selection dialog
       String? selectedPlaylist;
       await showDialog<String>(
         context: context,
@@ -156,15 +69,11 @@ class _SongMenuPageState extends State<SongMenuPage> {
       );
 
       if (selectedPlaylist != null && mounted) {
-        // Get current playlist data
         final playlistData = playlistSongsBox.get(selectedPlaylist);
-        List<String> songs = [];
-        
-        if (playlistData != null && playlistData['songs'] != null) {
-          songs = List<String>.from(playlistData['songs']);
-        }
+        List<String> songs = playlistData != null && playlistData['songs'] != null
+            ? List<String>.from(playlistData['songs'])
+            : [];
 
-        // Check if song is already in playlist
         if (songs.contains(_song.path)) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -178,7 +87,6 @@ class _SongMenuPageState extends State<SongMenuPage> {
           return;
         }
 
-        // Add song to playlist
         songs.add(_song.path);
         await playlistSongsBox.put(selectedPlaylist, {
           'songs': songs,
@@ -219,7 +127,7 @@ class _SongMenuPageState extends State<SongMenuPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(10), 
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -265,19 +173,34 @@ class _SongMenuPageState extends State<SongMenuPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 children: [
                   PlayPauseWidget(song: _song, audioPlayer: widget.audioPlayer),
-                  _buildMenuItem(
+                  buildMenuItem(
                     context,
                     Icons.skip_next,
                     'Play Next',
-                    onTap: _playNextSong,
+                    onTap: () async {
+                      final nextSong = await widget.playNextService.playNext(_song);
+                      if (nextSong != null && mounted) {
+                        setState(() {
+                          _song = nextSong;
+                        });
+                      }
+                    },
                   ),
-                  _buildMenuItem(
+                  buildMenuItem(
                     context,
                     _song.isFavorite ? Icons.favorite : Icons.favorite_border,
                     _song.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-                    onTap: _toggleFavorite,
+                    onTap: () {
+                      FavoriteService(widget.songService).toggleFavorite(
+                        context,
+                        _song,
+                        (updatedSong) => setState(() {
+                          _song = updatedSong;
+                        }),
+                      );
+                    },
                   ),
-                  _buildMenuItem(
+                  buildMenuItem(
                     context,
                     Icons.playlist_add,
                     'Add to Playlist',
@@ -285,36 +208,6 @@ class _SongMenuPageState extends State<SongMenuPage> {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    BuildContext context,
-    IconData icon,
-    String text, {
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: icon == Icons.favorite && _song.isFavorite
-                  ? Colors.red
-                  : Theme.of(context).textTheme.bodyLarge!.color,
-              size: 30,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              text,
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20),
             ),
           ],
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
-import 'package:musicvoxaplay/screens/services/video_service.dart';
+import 'package:musicvoxaplay/screens/services/video_service/video_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
 import 'package:musicvoxaplay/screens/video/video_fullscreen.dart';

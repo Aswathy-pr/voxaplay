@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
-import 'package:musicvoxaplay/screens/services/video_service.dart';
+import 'package:musicvoxaplay/screens/services/video_service/video_service.dart';
 import 'package:musicvoxaplay/screens/widgets/video/video_list_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
 import 'package:musicvoxaplay/screens/video/video_fullscreen.dart';
-import 'package:musicvoxaplay/screens/video/video_menu_page.dart';
+import 'package:musicvoxaplay/screens/menubars/video_menubar/video_menu_page.dart';
 
 class VideoPage extends StatefulWidget {
   const VideoPage({Key? key}) : super(key: key);
@@ -115,7 +115,7 @@ Future<void> _navigateToVideoMenu(Video video) async {
   final result = await Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => VideoMenuPage(
+      builder: (context) => VideoMenuPage (
         video: video,
         videoService: _videoService, // Use the existing VideoService instance
         allVideos: allVideos, // Pass all videos

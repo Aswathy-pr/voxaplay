@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/video_models.dart';
-import 'package:musicvoxaplay/screens/services/video_service.dart';
+import 'package:musicvoxaplay/screens/services/video_service/video_service.dart';
 import 'package:musicvoxaplay/screens/menubars/song_menubar/add_to_playlist.dart';
 import 'package:musicvoxaplay/screens/menubars/video_menubar/video_favourite_service.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
