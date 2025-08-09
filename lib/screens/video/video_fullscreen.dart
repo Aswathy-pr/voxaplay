@@ -181,7 +181,6 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                   
                     VideoProgressRow(
                       controller: _controller,
                       formatDuration: _formatDuration,
@@ -234,7 +233,6 @@ class _VideoFullScreenState extends State<VideoFullScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-           
               _isInitialized
                   ? VideoProgressRow(
                       controller: _controller,
