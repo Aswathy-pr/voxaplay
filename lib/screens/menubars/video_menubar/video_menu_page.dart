@@ -29,7 +29,7 @@ class _VideoMenuPageState extends State<VideoMenuPage> {
   @override
   void initState() {
     super.initState();
-    // _video = widget.video ?? Video(title: 'Unknown', path: '');
+    _video = widget.video ?? Video(title: 'Unknown', path: '');
   }
 
   Future<void> _toggleFavorite() async {

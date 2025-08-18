@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class DeleteVideoPlaylistDialog extends StatefulWidget {
-  final List<dynamic> playlists;
+  final List<String> playlists;
   final Box playlistVideosBox;
-  final Function(String?) onDelete;
+  final ValueChanged<String> onDelete;
 
   const DeleteVideoPlaylistDialog({
     super.key,
     required this.playlists,
-    required this.playlistVideosBox, 
+    required this.playlistVideosBox,
     required this.onDelete,
   });
 
@@ -38,41 +38,45 @@ class _DeleteVideoPlaylistDialogState extends State<DeleteVideoPlaylistDialog> {
         ),
       ),
       content: Container(
-        constraints: const BoxConstraints(maxHeight: 200),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.playlists.map((playlist) {
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
+        width: double.maxFinite,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
+        ),
+        child: ListView.builder(
+          clipBehavior: Clip.hardEdge,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: widget.playlists.length,
+          itemBuilder: (context, index) {
+            final playlist = widget.playlists[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.delete,
+                  color: selectedPlaylist == playlist ? Colors.red[900] : Colors.grey[800],
                 ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.delete,
-                    color: selectedPlaylist == playlist ? Colors.red : Colors.grey[800],
+                title: Text(
+                  playlist,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[700],
                   ),
-                  title: Text(
-                    playlist,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      selectedPlaylist = playlist;
-                    });
-                  },
-                  selected: selectedPlaylist == playlist,
-                  selectedTileColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 ),
-              );
-            }).toList(),
-          ),
+                onTap: () {
+                  setState(() {
+                    selectedPlaylist = playlist;
+                  });
+                },
+                selected: selectedPlaylist == playlist,
+                selectedTileColor: Colors.grey[200],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              ),
+            );
+          },
         ),
       ),
       actions: [
@@ -92,20 +96,32 @@ class _DeleteVideoPlaylistDialogState extends State<DeleteVideoPlaylistDialog> {
         TextButton(
           onPressed: selectedPlaylist == null
               ? null
-              : () {
-                  if (selectedPlaylist != null) {
+              : () async {
+                  try {
                     final updatedPlaylists = List<String>.from(playlistsBox.get('playlists') ?? []);
                     if (updatedPlaylists.contains(selectedPlaylist)) {
                       updatedPlaylists.remove(selectedPlaylist!);
-                      playlistsBox.put('playlists', updatedPlaylists);
-                      widget.playlistVideosBox.delete(selectedPlaylist!); // Use passed box
-                      widget.onDelete(selectedPlaylist);
-                      Navigator.pop(context);
+                      await playlistsBox.put('playlists', updatedPlaylists);
+                      await widget.playlistVideosBox.delete(selectedPlaylist!);
+                      widget.onDelete(selectedPlaylist!);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint('Error deleting playlist: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to delete playlist'),
+                          backgroundColor: Colors.red[900],
+                        ),
+                      );
                     }
                   }
                 },
           style: TextButton.styleFrom(
-            backgroundColor: Colors.red[400],
+            backgroundColor: Colors.red[900],
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
@@ -115,7 +131,7 @@ class _DeleteVideoPlaylistDialogState extends State<DeleteVideoPlaylistDialog> {
             style: TextStyle(color: Colors.white),
           ),
         ),
-     ],
-);
+      ],
+    );
+  }
 }
-} 

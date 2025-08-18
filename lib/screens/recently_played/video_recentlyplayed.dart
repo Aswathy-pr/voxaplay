@@ -54,11 +54,7 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.video_library_outlined,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
+                    
                       const SizedBox(height: 16),
                       Text(
                         'No recently played videos',
@@ -74,10 +70,7 @@ class _VideoRecentlyPlayedPageState extends State<VideoRecentlyPlayedPage> {
                             ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => setState(() {}),
-                        child: const Text('Refresh'),
-                      ),
+                     
                     ],
                   ),
                 );

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class RenameVideoPlaylistDialog extends StatefulWidget {
-  final List<dynamic> playlists;
-  final Function(String?) onSelect;
+  final List<String> playlists;
+  final ValueChanged<String> onSelect;
 
   const RenameVideoPlaylistDialog({
     super.key,
@@ -33,41 +33,45 @@ class _RenameVideoPlaylistDialogState extends State<RenameVideoPlaylistDialog> {
         ),
       ),
       content: Container(
-        constraints: const BoxConstraints(maxHeight: 200),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.playlists.map((playlist) {
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
+        width: double.maxFinite,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
+        ),
+        child: ListView.builder(
+          clipBehavior: Clip.hardEdge,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: widget.playlists.length,
+          itemBuilder: (context, index) {
+            final playlist = widget.playlists[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.edit,
+                  color: selectedPlaylist == playlist ? Colors.blue : Colors.grey[800],
                 ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.edit,
-                    color: selectedPlaylist == playlist ? Colors.blue : Colors.grey[800],
+                title: Text(
+                  playlist,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[700],
                   ),
-                  title: Text(
-                    playlist,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      selectedPlaylist = playlist;
-                    });
-                  },
-                  selected: selectedPlaylist == playlist,
-                  selectedTileColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 ),
-              );
-            }).toList(),
-          ),
+                onTap: () {
+                  setState(() {
+                    selectedPlaylist = playlist;
+                  });
+                },
+                selected: selectedPlaylist == playlist,
+                selectedTileColor: Colors.grey[200],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              ),
+            );
+          },
         ),
       ),
       actions: [
@@ -88,10 +92,8 @@ class _RenameVideoPlaylistDialogState extends State<RenameVideoPlaylistDialog> {
           onPressed: selectedPlaylist == null
               ? null
               : () {
-                  if (selectedPlaylist != null) {
-                    widget.onSelect(selectedPlaylist);
-                    Navigator.pop(context);
-                  }
+                  widget.onSelect(selectedPlaylist!);
+                  Navigator.pop(context);
                 },
           style: TextButton.styleFrom(
             backgroundColor: Colors.blue[400],
@@ -107,4 +109,4 @@ class _RenameVideoPlaylistDialogState extends State<RenameVideoPlaylistDialog> {
       ],
     );
   }
-} 
+}

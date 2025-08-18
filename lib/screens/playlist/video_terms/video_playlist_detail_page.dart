@@ -59,7 +59,7 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
           'Removed video from ${widget.playlistName}',
           style: Theme.of(context).textTheme.bodyLarge,
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.red[900],
         action: SnackBarAction(
           label: 'Undo',
           textColor: Theme.of(context).colorScheme.primary,
@@ -82,255 +82,289 @@ class _VideoPlaylistDetailPageState extends State<VideoPlaylistDetailPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildAppBar(context, widget.playlistName, showBackButton: true),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ValueListenableBuilder(
-          valueListenable: widget.playlistVideosBox.listenable(),
-          builder: (context, Box box, _) {
-            final playlistData = box.get(widget.playlistName);
-            playlistVideos =
-                playlistData != null && playlistData['videos'] is List
-                ? List<String>.from(playlistData['videos'])
-                : [];
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ValueListenableBuilder(
+            valueListenable: widget.playlistVideosBox.listenable(),
+            builder: (context, Box box, _) {
+              final playlistData = box.get(widget.playlistName);
+              playlistVideos =
+                  playlistData != null && playlistData['videos'] is List
+                      ? List<String>.from(playlistData['videos'])
+                      : [];
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Videos in Playlist',
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '(${playlistVideos.length})',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: playlistVideos.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.playlist_add,
-                                size: 60,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No videos in this playlist yet',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: playlistVideos.length,
-                          itemBuilder: (context, index) {
-                            final videoPath = playlistVideos[index];
-                            final video = videosBox.values.firstWhere(
-                              (v) => v.path == videoPath,
-                              orElse: () => Video(
-                                title: 'Unknown Title',
-                                path: videoPath,
-                              ),
-                            );
-
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                leading: video.thumbnail != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.memory(
-                                          video.thumbnail!,
-                                          width: 50,
-                                          height: 50,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Icon(
-                                          Icons.video_library,
-                                          color: Theme.of(context).textTheme.bodyLarge!.color,
-                                        ),
-                                      ),
-                                title: Text(
-                                  video.title,
-                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                ),
-                                subtitle: Text(
-                                  video.duration != null
-                                      ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
-                                      : 'Unknown duration',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.play_arrow,
-                                        color: Theme.of(context).textTheme.bodyLarge!.color,
-                                      ),
-                                      onPressed: () async {
-                                        try {
-                                          final allVideos = playlistVideos.map((
-                                            path,
-                                          ) {
-                                            return videosBox.values.firstWhere(
-                                              (v) => v.path == path,
-                                              orElse: () => Video(
-                                                title: 'Unknown',
-                                                path: path,
-                                              ),
-                                            );
-                                          }).toList();
-
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  VideoFullScreen(
-                                                    videos: allVideos,
-                                                    initialIndex: allVideos
-                                                        .indexOf(video),
-                                                  ),
-                                            ),
-                                          );
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Error playing video: $e',
-                                                  style: Theme.of(context).textTheme.bodyLarge,
-                                                ),
-                                                backgroundColor: Theme.of(context).colorScheme.error,
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.remove_circle,
-                                        color: Theme.of(context).colorScheme.error,
-                                      ),
-                                      onPressed: () => _removeVideo(index),
-                                    ),
-                                  ],
-                                ),
-                                onTap: () async {
-                                  try {
-                                    final allVideos = playlistVideos.map((
-                                      path,
-                                    ) {
-                                      return videosBox.values.firstWhere(
-                                        (v) => v.path == path,
-                                        orElse: () =>
-                                            Video(title: 'Unknown', path: path),
-                                      );
-                                    }).toList();
-
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => VideoFullScreen(
-                                          videos: allVideos,
-                                          initialIndex: allVideos.indexOf(
-                                            video,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Error playing video: $e',
-                                            style: Theme.of(context).textTheme.bodyLarge,
-                                          ),
-                                          backgroundColor: Theme.of(context).colorScheme.error,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddSelectedVideoPage(
-                          playlistName: widget.playlistName,
-                          playlistVideosBox: widget.playlistVideosBox,
-                        ),
-                      ),
-                    );
-                    // No need to call _loadPlaylistVideos() since ValueListenableBuilder handles updates
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.red,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(Icons.add, size: 24),
-                      const SizedBox(width: 8),
                       Text(
-                        'Add New Videos',
-                        style: TextStyle(
-                          color: AppColors.white,
-                              fontSize: 16,
+                        'Videos in Playlist',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '(${playlistVideos.length})',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            );
-          },
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: playlistVideos.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.playlist_add,
+                                  size: 60,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No videos in this playlist yet',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            clipBehavior: Clip.hardEdge,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: playlistVideos.length,
+                            itemBuilder: (context, index) {
+                              final videoPath = playlistVideos[index];
+                              final video = videosBox.values.firstWhere(
+                                (v) => v.path == videoPath,
+                                orElse: () => Video(
+                                  title: 'Unknown Title',
+                                  path: videoPath,
+                                ),
+                              );
+
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surface
+                                    .withOpacity(0.1),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  leading: video.thumbnail != null
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          child: Image.memory(
+                                            video.thumbnail!,
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface
+                                                .withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Icon(
+                                            Icons.video_library,
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge!
+                                                .color,
+                                          ),
+                                        ),
+                                  title: Text(
+                                    video.title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge!
+                                        .copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                  subtitle: Text(
+                                    video.duration != null
+                                        ? '${video.duration!.inMinutes}:${(video.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
+                                        : 'Unknown duration',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.play_arrow,
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge!
+                                              .color,
+                                        ),
+                                        onPressed: () async {
+                                          try {
+                                            final allVideos =
+                                                playlistVideos.map((
+                                              path,
+                                            ) {
+                                              return videosBox.values
+                                                  .firstWhere(
+                                                (v) => v.path == path,
+                                                orElse: () => Video(
+                                                  title: 'Unknown',
+                                                  path: path,
+                                                ),
+                                              );
+                                            }).toList();
+
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    VideoFullScreen(
+                                                  videos: allVideos,
+                                                  initialIndex:
+                                                      allVideos.indexOf(video),
+                                                ),
+                                              ),
+                                            );
+                                          } catch (e) {
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Error playing video: $e',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyLarge,
+                                                  ),
+                                                  backgroundColor: Theme.of(
+                                                          context)
+                                                      .colorScheme
+                                                      .error,
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.remove_circle,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
+                                        ),
+                                        onPressed: () => _removeVideo(index),
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () async {
+                                    try {
+                                      final allVideos = playlistVideos.map((
+                                        path,
+                                      ) {
+                                        return videosBox.values.firstWhere(
+                                          (v) => v.path == path,
+                                          orElse: () => Video(
+                                              title: 'Unknown', path: path),
+                                        );
+                                      }).toList();
+
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => VideoFullScreen(
+                                            videos: allVideos,
+                                            initialIndex:
+                                                allVideos.indexOf(video),
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Error playing video: $e',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge,
+                                            ),
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddSelectedVideoPage(
+                            playlistName: widget.playlistName,
+                            playlistVideosBox: widget.playlistVideosBox,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.red,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add New Videos',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

@@ -56,10 +56,7 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
                             ),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => setState(() {}),
-                        child: const Text('Refresh'),
-                      ),
+                   
                     ],
                   ),
                 );

@@ -5,7 +5,6 @@ import 'package:musicvoxaplay/screens/playlist/video_terms/delete_video_playlist
 import 'package:musicvoxaplay/screens/playlist/video_terms/video_playlist_detail_page.dart';
 import 'package:musicvoxaplay/screens/playlist/video_terms/rename_video_playlist.dart';
 
-
 class VideoContentHelper {
   static Future<void> migrateOldPlaylistFormat(Box playlistVideosBox) async {
     final keys = playlistVideosBox.keys.toList();
@@ -55,20 +54,16 @@ class VideoContentHelper {
     Video? currentVideo,
   ) async {
     try {
-      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
-      if (playlists.length >= 3) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Maximum 3 playlists allowed')),
-        );
-        return;
-      }
-
+      final playlists = List<String>.from(playlistsBox.get('playlists', defaultValue: []) ?? []);
       final newPlaylistName = await _showCreatePlaylistDialog(context);
       if (newPlaylistName == null || newPlaylistName.isEmpty) return;
 
       if (playlists.contains(newPlaylistName)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Playlist already exists')),
+          SnackBar(
+            content: Text('Playlist already exists'),
+            backgroundColor: Colors.red[900],
+          ),
         );
         return;
       }
@@ -79,19 +74,32 @@ class VideoContentHelper {
         await playlistVideosBox.put(newPlaylistName, {
           'videos': [currentVideo.path],
           'createdAt': DateTime.now().toString(),
+          'updatedAt': DateTime.now().toString(),
+        });
+      } else {
+        await playlistVideosBox.put(newPlaylistName, {
+          'videos': [],
+          'createdAt': DateTime.now().toString(),
+          'updatedAt': DateTime.now().toString(),
         });
       }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Created playlist: $newPlaylistName')),
+          SnackBar(
+            content: Text('Created playlist: $newPlaylistName'),
+            backgroundColor: Colors.red[900],
+          ),
         );
       }
     } catch (e) {
       debugPrint('Error creating playlist: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to create playlist')),
+          SnackBar(
+            content: Text('Failed to create playlist'),
+            backgroundColor: Colors.red[900],
+          ),
         );
       }
     }
@@ -104,18 +112,20 @@ class VideoContentHelper {
     required VoidCallback onRefresh,
   }) async {
     try {
-      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      final playlists = List<String>.from(playlistsBox.get('playlists', defaultValue: []) ?? []);
       if (playlists.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No playlists to rename')),
+          SnackBar(
+            content: Text('No playlists to rename'),
+            backgroundColor: Colors.red[900],
+          ),
         );
         return;
       }
 
       String? oldPlaylistName;
       String? newPlaylistName;
-      
-      // First dialog to select playlist to rename
+
       await showDialog<String>(
         context: context,
         builder: (context) => RenameVideoPlaylistDialog(
@@ -127,21 +137,20 @@ class VideoContentHelper {
       );
 
       if (oldPlaylistName != null && context.mounted) {
-        // Second dialog to enter new name
         newPlaylistName = await _showRenamePlaylistDialog(context, oldPlaylistName!);
-        
+
         if (newPlaylistName != null && newPlaylistName.isNotEmpty && context.mounted) {
           if (playlists.contains(newPlaylistName)) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Playlist name already exists')),
+              SnackBar(
+                content: Text('Playlist name already exists'),
+                backgroundColor: Colors.red[900],
+              ),
             );
             return;
           }
 
-          // Get the old playlist data
           final oldPlaylistData = playlistVideosBox.get(oldPlaylistName!);
-          
-          // Update playlist name in playlists list
           final updatedPlaylists = List<String>.from(playlists);
           final index = updatedPlaylists.indexOf(oldPlaylistName!);
           if (index != -1) {
@@ -149,7 +158,6 @@ class VideoContentHelper {
             await playlistsBox.put('playlists', updatedPlaylists);
           }
 
-          // Move playlist data to new name
           if (oldPlaylistData != null) {
             await playlistVideosBox.put(newPlaylistName, oldPlaylistData);
             await playlistVideosBox.delete(oldPlaylistName!);
@@ -157,7 +165,10 @@ class VideoContentHelper {
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Renamed playlist: $oldPlaylistName → $newPlaylistName')),
+              SnackBar(
+                content: Text('Renamed playlist: $oldPlaylistName → $newPlaylistName'),
+                backgroundColor: Colors.red[900],
+              ),
             );
             onRefresh();
           }
@@ -167,7 +178,10 @@ class VideoContentHelper {
       debugPrint('Error renaming playlist: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to rename playlist')),
+          SnackBar(
+            content: Text('Failed to rename playlist'),
+            backgroundColor: Colors.red[900],
+          ),
         );
       }
     }
@@ -180,10 +194,13 @@ class VideoContentHelper {
     required VoidCallback onRefresh,
   }) async {
     try {
-      final playlists = playlistsBox.get('playlists', defaultValue: [])!;
+      final playlists = List<String>.from(playlistsBox.get('playlists', defaultValue: []) ?? []);
       if (playlists.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No playlists to delete')),
+          SnackBar(
+            content: Text('No playlists to delete'),
+            backgroundColor: Colors.red[900],
+          ),
         );
         return;
       }
@@ -202,7 +219,10 @@ class VideoContentHelper {
 
       if (deletedPlaylist != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Deleted playlist: $deletedPlaylist')),
+          SnackBar(
+            content: Text('Deleted playlist: $deletedPlaylist'),
+            backgroundColor: Colors.red[900],
+          ),
         );
         onRefresh();
       }
@@ -210,7 +230,10 @@ class VideoContentHelper {
       debugPrint('Error deleting playlist: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete playlist')),
+          SnackBar(
+            content: Text('Failed to delete playlist'),
+            backgroundColor: Colors.red[900],
+          ),
         );
       }
     }
@@ -221,16 +244,21 @@ class VideoContentHelper {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create New Video Playlist', style: TextStyle(color: Colors.black),),
-        content: TextField(
-          autofocus: true,
-          onChanged: (value) => playlistName = value,
-          style: const TextStyle(color: Colors.black),
-          decoration: const InputDecoration(
-            hintText: 'Enter playlist name',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
+        title: const Text(
+          'Create New Video Playlist',
+          style: TextStyle(color: Colors.black),
+        ),
+        content: SingleChildScrollView(
+          child: TextField(
+            autofocus: true,
+            onChanged: (value) => playlistName = value,
+            style: const TextStyle(color: Colors.black),
+            decoration: const InputDecoration(
+              hintText: 'Enter playlist name',
+              border: OutlineInputBorder(),
+              filled: true,
+              fillColor: Colors.white,
+            ),
           ),
         ),
         actions: [
@@ -256,17 +284,22 @@ class VideoContentHelper {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename Video Playlist', style: TextStyle(color: Colors.black),),
-        content: TextField(
-          autofocus: true,
-          controller: TextEditingController(text: currentName),
-          onChanged: (value) => newPlaylistName = value,
-          style: const TextStyle(color: Colors.black),
-          decoration: const InputDecoration(
-            hintText: 'Enter new playlist name',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
+        title: const Text(
+          'Rename Video Playlist',
+          style: TextStyle(color: Colors.black),
+        ),
+        content: SingleChildScrollView(
+          child: TextField(
+            autofocus: true,
+            controller: TextEditingController(text: currentName),
+            onChanged: (value) => newPlaylistName = value,
+            style: const TextStyle(color: Colors.black),
+            decoration: const InputDecoration(
+              hintText: 'Enter new playlist name',
+              border: OutlineInputBorder(),
+              filled: true,
+              fillColor: Colors.white,
+            ),
           ),
         ),
         actions: [
@@ -286,4 +319,4 @@ class VideoContentHelper {
       ),
     );
   }
-} 
+}
