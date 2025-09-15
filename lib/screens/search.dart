@@ -74,9 +74,7 @@ class _SearchpageState extends State<Searchpage> {
                 prefixIcon: Icon(
                   Icons.search,
                   color: Colors.black,
-                  
                 ),
-
               ),
               style: TextStyle(color: Colors.black),
             ),
@@ -171,35 +169,51 @@ class _SearchpageState extends State<Searchpage> {
                           color: Theme.of(context).textTheme.bodyLarge!.color,
                         ),
                         onTap: isPlayable
-                            ? () {
-                                AudioPlayerManager().player.stop();
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (
-                                      context,
-                                      animation,
-                                      secondaryAnimation,
-                                    ) => AudioFullScreen(
-                                      song: song,
-                                      songs: snapshot.data!,
+                            ? () async {
+                                try {
+                                  await AudioPlayerManager().player.stop();
+                                  await AudioPlayerManager().setPlaylist(
+                                    snapshot.data!,
+                                    initialIndex: snapshot.data!.indexOf(song),
+                                  );
+                                  await AudioPlayerManager().player.play();
+                                  await _songService.addToRecentlyPlayed(song); // Add to recently played
+                                  await _songService.incrementPlayCount(song); // Increment play count
+                                  await Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => AudioFullScreen(
+                                        song: song,
+                                        songs: snapshot.data!,
+                                        songService: _songService, // Pass SongService
+                                      ),
+                                      transitionsBuilder: (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                        child,
+                                      ) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: child,
+                                        );
+                                      },
+                                      transitionDuration: const Duration(
+                                        milliseconds: 300,
+                                      ),
                                     ),
-                                    transitionsBuilder: (
-                                      context,
-                                      animation,
-                                      secondaryAnimation,
-                                      child,
-                                    ) {
-                                      return FadeTransition(
-                                        opacity: animation,
-                                        child: child,
-                                      );
-                                    },
-                                    transitionDuration: const Duration(
-                                      milliseconds: 300,
-                                    ),
-                                  ),
-                                );
+                                  );
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error playing song: $e')),
+                                    );
+                                  }
+                                }
                               }
                             : null,
                       );

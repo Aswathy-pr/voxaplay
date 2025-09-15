@@ -70,26 +70,8 @@ class _VideoFullscreenWidgetState extends State<VideoFullscreenWidget> {
     }
   }
 
-  // void _toggleRotation() {
-  //   setState(() {
-  //     _isLandscape = !_isLandscape;
-  //   });
-
-  //   if (_isLandscape) {
-  //     // Force landscape
-  //     SystemChrome.setPreferredOrientations([
-  //       DeviceOrientation.landscapeLeft,
-  //       DeviceOrientation.landscapeRight,
-  //     ]);
-  //   } else {
-  //     // Allow all orientations
-  //     SystemChrome.setPreferredOrientations([
-  //       DeviceOrientation.portraitUp,
-  //       DeviceOrientation.landscapeLeft,
-  //       DeviceOrientation.landscapeRight,
-  //     ]);
-  //   }
-  // }
+  
+  
 
   void _toggleControls() {
     setState(() {

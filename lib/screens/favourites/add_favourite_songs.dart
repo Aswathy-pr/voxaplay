@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
@@ -197,25 +198,16 @@ class _AddFavoriteSongsPageState extends State<AddFavoriteSongsPage> {
                                   title: Text(
                                     song.title,
                                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        song.artist,
-                                        style: Theme.of(context).textTheme.bodyMedium,
-                                      ),
-                                      if (song.playedAt != null)
-                                        Text(
-                                          'Played ${song.playedAt!.toString().split(' ')[0]}',
-                                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                                                fontSize: 12,
-                                              ),
-                                        ),
-                                    ],
+                                  subtitle: Text(
+                                    song.artist,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   trailing: IconButton(
                                     icon: Icon(
@@ -223,7 +215,7 @@ class _AddFavoriteSongsPageState extends State<AddFavoriteSongsPage> {
                                       color: isInFavorites
                                           ? AppColors.red
                                           : Theme.of(context).colorScheme.primary,
-                                      size: 24,
+                                      size: 20,
                                     ),
                                     onPressed: () => _toggleFavorite(song),
                                   ),

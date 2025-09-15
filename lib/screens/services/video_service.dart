@@ -79,7 +79,8 @@ class VideoService {
         path: file.path,
         duration: duration,
         thumbnail: thumbnail,
-        isFavorite: false, // Default to false
+        isFavorite: false, 
+        
         playcount: 0,
         playedAt: null,
       );
@@ -113,7 +114,8 @@ class VideoService {
             videoCount++;
             print("Found video file: $fileName");
             try {
-              // Check if video already exists
+             
+             
               if (!videos.any((v) => v.path == entity.path)) {
                 final video = await _createVideoFromFile(entity);
                 if (video != null) {
@@ -140,7 +142,8 @@ class VideoService {
     try {
       print("Starting video fetch...");
       
-      // Request permissions
+      
+      
       final storagePermission = await Permission.storage.request();
       final videosPermission = await Permission.videos.request();
       
@@ -219,7 +222,8 @@ class VideoService {
     try {
       print("Starting video fetch with picker...");
       
-      // Request permissions
+     
+     
       final storagePermission = await Permission.storage.request();
       final videosPermission = await Permission.videos.request();
       
@@ -231,7 +235,8 @@ class VideoService {
         return videos;
       }
 
-      // Prevent duplicates
+      
+      
       final box = await _getBox();
       await box.clear();
       print("Cleared existing videos from Hive");
@@ -249,7 +254,8 @@ class VideoService {
         for (var file in videoFiles) {
           final video = await _createVideoFromFile(file);
           if (video != null) {
-            // Only add if not already in the list 
+           
+           
             if (!videos.any((v) => v.path == video.path)) {
               videos.add(video);
             }
@@ -259,7 +265,8 @@ class VideoService {
         print("File picker was cancelled or returned null");
       }
 
-      // Remove duplicates 
+      
+      
       final uniqueVideos = <String, Video>{};
       for (var video in videos) {
         uniqueVideos[video.path] = video;
@@ -317,7 +324,8 @@ class VideoService {
       final mostPlayedBox = await _getMostPlayedBox();
       final recentlyPlayedBox = await _getRecentlyPlayedBox();
 
-      // Create updated video with current timestamp and incremented play count
+      
+      
       final updatedVideo = Video(
         title: video.title,
         path: video.path,
@@ -328,7 +336,8 @@ class VideoService {
         playcount: video.playcount + 1,
       );
       
-      // Find the video in the main box
+     
+     
       final videoIndex = box.values.toList().indexWhere(
         (v) => v.path == video.path,
       );
@@ -336,11 +345,13 @@ class VideoService {
       if (videoIndex != -1) {
         await box.putAt(videoIndex, updatedVideo);
       } else {
-        // If video not in main box, add it
+      
+      
         await box.put(video.path, updatedVideo);
       }
       
-      // Update in most played box
+      
+      
       final mostPlayedIndex = mostPlayedBox.values.toList().indexWhere(
         (v) => v.path == video.path,
       );
@@ -350,7 +361,8 @@ class VideoService {
         await mostPlayedBox.add(updatedVideo);
       }
       
-      // Add to recently played
+     
+     
       await addToRecentlyPlayed(updatedVideo);
       
       await mostPlayedBox.compact();
@@ -423,12 +435,14 @@ class VideoService {
         print('Removed existing video at index: $existingIndex');
       }
       
-      // Add to the beginning by using a unique key
+      
+      
       final key = DateTime.now().millisecondsSinceEpoch.toString();
       await box.put(key, video);
       print('Added video to recently played box. New length: ${box.length}');
       
-      // Keep only the last 50 videos
+      
+      
       if (box.length > 50) {
         final videos = box.values.toList();
         videos.sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));

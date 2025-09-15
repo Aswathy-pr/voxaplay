@@ -1,3 +1,6 @@
+
+
+
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
@@ -54,7 +57,6 @@ class _AudioPageState extends State<AudioPage> {
           setState(() {
             _currentlyPlayingSong = songs[index];
           });
-          
           await _songService.incrementPlayCount(songs[index]);
         }
       }
@@ -66,7 +68,7 @@ class _AudioPageState extends State<AudioPage> {
     setState(() {
       _currentIndex = index;
     });
-    if (index != 0 ) {
+    if (index != 0) {
       _audioPlayer.pause();
     }
   }
@@ -80,9 +82,7 @@ class _AudioPageState extends State<AudioPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error toggling playback: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error toggling playback: $e')));
       }
     }
   }
@@ -94,22 +94,25 @@ class _AudioPageState extends State<AudioPage> {
         initialIndex: songs.indexOf(song),
       );
       await _audioPlayer.play();
+      await _songService.addToRecentlyPlayed(song);
+      await _songService.incrementPlayCount(song);
       setState(() {
         _currentlyPlayingSong = song;
         _isPlaying = true;
       });
-      await _songService.incrementPlayCount(song);
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AudioFullScreen(song: song, songs: songs),
+          builder: (context) => AudioFullScreen(
+            song: song,
+            songs: songs,
+            songService: _songService, 
+          ),
         ),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error playing song: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error playing song: $e')));
       }
     }
   }
@@ -175,6 +178,7 @@ class _AudioPageState extends State<AudioPage> {
                       builder: (context) => AudioFullScreen(
                         song: _currentlyPlayingSong!,
                         songs: songs,
+                        songService: _songService, 
                       ),
                     ),
                   );

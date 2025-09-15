@@ -54,7 +54,7 @@ class VideoFavoriteService {
         );
       }
     } catch (e) {
-      updateVideoCallback(video); // Revert state on error
+      updateVideoCallback(video); 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

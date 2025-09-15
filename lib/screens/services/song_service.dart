@@ -1,3 +1,5 @@
+
+
 import 'dart:typed_data';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -9,7 +11,6 @@ class SongService {
   late Box<Song> _songsBox;
   late Box<Song> _recentlyPlayedBox;
   late Box<Song> _mostPlayedBox;
-  final Set<String> _recentlyAddedPaths = {};
 
   SongService() {
     _songsBox = Hive.box<Song>('songsBox');
@@ -171,11 +172,9 @@ class SongService {
         } else {
           await _mostPlayedBox.add(updatedSong);
         }
-        await addToRecentlyPlayed(updatedSong);
         await _mostPlayedBox.compact();
-        await _recentlyPlayedBox.compact();
         print(
-          'Incremented play count for "${song.title}" to ${updatedSong.playcount}, recentlyPlayed: ${_recentlyPlayedBox.length} songs',
+          'Incremented play count for "${song.title}" to ${updatedSong.playcount}, mostPlayed: ${_mostPlayedBox.length} songs',
         );
       } else {
         print('Song "${song.title}" not found in songsBox');
@@ -187,20 +186,6 @@ class SongService {
 
   Future<void> addToRecentlyPlayed(Song song) async {
     try {
-      if (_recentlyAddedPaths.contains(song.path)) {
-        print('Skipping duplicate add for "${song.title}" (already in cache)');
-        return;
-      }
-
-      _recentlyAddedPaths.add(song.path);
-      Future.delayed(
-        const Duration(seconds: 1),
-        () => _recentlyAddedPaths.remove(song.path),
-      );
-
-      final existingIndex = _recentlyPlayedBox.values.toList().indexWhere(
-        (s) => s.path == song.path,
-      );
       final updatedSong = Song(
         song.title,
         song.artist,
@@ -210,17 +195,29 @@ class SongService {
         isFavorite: song.isFavorite,
         playcount: song.playcount,
       );
-      if (existingIndex != -1) {
-        await _recentlyPlayedBox.putAt(existingIndex, updatedSong);
-        print(
-          'Updated "${song.title}" in recentlyPlayed box at index $existingIndex',
-        );
-      } else {
-        await _recentlyPlayedBox.add(updatedSong);
-        print('Added "${song.title}" to recentlyPlayed box');
+
+      // Load existing songs into a map to ensure uniqueness by path
+      final songsMap = <String, Song>{};
+      for (var s in _recentlyPlayedBox.values) {
+        songsMap[s.path] = s;
       }
+
+      // Add or update the song
+      songsMap[song.path] = updatedSong;
+
+      // Convert to list, sort by playedAt (newest first), and limit to 10
+      final songs = songsMap.values.toList()
+        ..sort((a, b) => (b.playedAt ?? DateTime(0)).compareTo(a.playedAt ?? DateTime(0)));
+      final limitedSongs = songs.length > 10 ? songs.sublist(0, 10) : songs;
+
+      // Clear and repopulate the box
+      await _recentlyPlayedBox.clear();
+      for (var s in limitedSongs) {
+        await _recentlyPlayedBox.add(s);
+      }
+
       await _recentlyPlayedBox.compact();
-      print('RecentlyPlayed box size: ${_recentlyPlayedBox.length} songs');
+      print('Updated recentlyPlayed box with "${song.title}", size: ${_recentlyPlayedBox.length} songs');
     } catch (e) {
       print('Error adding to recently played: $e');
     }

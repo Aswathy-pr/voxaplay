@@ -1,9 +1,13 @@
+
+
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/audio/audio_fullscreen.dart';
 import 'package:musicvoxaplay/screens/widgets/appbar.dart';
 import 'package:musicvoxaplay/screens/widgets/bottom_navigationbar.dart';
+import 'package:musicvoxaplay/screens/services/song_service.dart'; 
 
 
 class RecentlyPlayedPage extends StatefulWidget {
@@ -15,13 +19,14 @@ class RecentlyPlayedPage extends StatefulWidget {
 
 class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
   int _currentIndex = 2; 
+  final SongService _songService = SongService(); 
+  
 
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
     setState(() {
       _currentIndex = index;
     });
-
   }
 
   @override
@@ -35,8 +40,6 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
           child: ValueListenableBuilder<Box<Song>>(
             valueListenable: Hive.box<Song>('recentlyPlayed').listenable(),
             builder: (context, box, _) {
-              print('RecentlyPlayedPage: Box contains ${box.length} songs');
-            
               final songsMap = <String, Song>{};
               for (var song in box.values) {
                 songsMap[song.path] = song;
@@ -56,7 +59,6 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
                             ),
                       ),
                       const SizedBox(height: 20),
-                   
                     ],
                   ),
                 );
@@ -96,6 +98,8 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
                     subtitle: Text(
                       song.artist,
                       style: Theme.of(context).textTheme.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis, 
                     ),
                     trailing: Icon(
                       Icons.more_horiz,
@@ -105,8 +109,11 @@ class _RecentlyPlayedPageState extends State<RecentlyPlayedPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              AudioFullScreen(song: song, songs: songs),
+                          builder: (context) => AudioFullScreen(
+                            song: song,
+                            songs: songs, 
+                            songService: _songService, 
+                          ),
                         ),
                       );
                     },

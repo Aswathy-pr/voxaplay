@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aswathy.musicvoxaplay">
 
 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
@@ -9,7 +10,7 @@
 
 
     <application
-        android:label="musicvoxaplay"
+        android:label="VoxaPlay"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

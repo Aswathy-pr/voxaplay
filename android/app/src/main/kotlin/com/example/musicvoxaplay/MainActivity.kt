@@ -1,4 +1,4 @@
-package com.example.musicvoxaplay
+package com.aswathy.musicvoxaplay
 
 import io.flutter.embedding.android.FlutterActivity
 

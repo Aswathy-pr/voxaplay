@@ -46,7 +46,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
         body: const TabBarView(
           children: [
             AudioContent(),
-            VideoContent(), // Replaced placeholder with VideoContent
+            VideoContent(), 
           ],
         ),
         bottomNavigationBar: buildBottomNavigationBar(

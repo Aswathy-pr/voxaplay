@@ -1,3 +1,6 @@
+
+
+
 import 'package:flutter/material.dart';
 import 'package:musicvoxaplay/screens/models/song_models.dart';
 import 'package:musicvoxaplay/screens/services/song_service.dart';
@@ -17,7 +20,7 @@ class MostPlayed extends StatefulWidget {
 }
 
 class _MostPlayedState extends State<MostPlayed> {
-  int _currentIndex = 2; 
+  int _currentIndex = 2;
   final SongService _songService = SongService();
   final AudioPlayer _audioPlayer = AudioPlayerManager().player;
   late final PlayNextService _playNextService;
@@ -25,7 +28,6 @@ class _MostPlayedState extends State<MostPlayed> {
   @override
   void initState() {
     super.initState();
-
     _playNextService = PlayNextService(songService: _songService, audioPlayer: _audioPlayer);
   }
 
@@ -39,8 +41,7 @@ class _MostPlayedState extends State<MostPlayed> {
     }
   }
 
-  
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -113,7 +114,7 @@ class _MostPlayedState extends State<MostPlayed> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                  const SizedBox(width: 8.0),
+                      const SizedBox(width: 8.0),
                       IconButton(
                         icon: Icon(
                           Icons.more_horiz,
@@ -128,11 +129,10 @@ class _MostPlayedState extends State<MostPlayed> {
                                 song: song,
                                 audioPlayer: _audioPlayer,
                                 songService: _songService,
-                                playNextService: _playNextService, // Pass PlayNextService
+                                playNextService: _playNextService,
                               ),
                             ),
                           ).then((_) {
-             
                             setState(() {});
                           });
                         },
@@ -150,17 +150,19 @@ class _MostPlayedState extends State<MostPlayed> {
                             initialIndex: index,
                           );
                           await _audioPlayer.play();
-                          await _songService.incrementPlayCount(song);
+                          await _songService.addToRecentlyPlayed(song); 
+                          await _songService.incrementPlayCount(song); 
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => AudioFullScreen(
                                 song: song,
                                 songs: songs,
+                                songService: _songService, 
                               ),
                             ),
                           );
-                          setState(() {});                                                  
+                          setState(() {});
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
